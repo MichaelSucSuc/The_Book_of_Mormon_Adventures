@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aventuras del Libro de Mormón</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <!-- Fullscreen Button -->
+        <button id="btn-fullscreen" onclick="toggleFullscreen()">Pantalla Completa 📺</button>
+
+        <!-- Canvas Game viewport -->
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+
+        <!-- MAIN MENU (Module Selector) -->
+        <div id="main-menu" class="overlay-screen active">
+            <h1 class="game-title">AVENTURAS DEL LIBRO DE MORMÓN</h1>
+            <p class="subtitle">Héroes de la Fe</p>
+
+            <div class="module-container">
+                <!-- Module 1 -->
+                <div class="module-card" onclick="window.game.loadModule(1)">
+                    <span class="module-number">MÓDULO 1</span>
+                    <h3 class="module-title">1 Nefi</h3>
+                    <p class="module-desc">La huida de Jerusalén, la obtención de las planchas de bronce y el viaje en barco.</p>
+                    <span class="status-badge unlocked">Desbloqueado</span>
+                </div>
+
+                <!-- Module 2 -->
+                <div id="card-mod-2" class="module-card locked" onclick="window.game.loadModule(2)">
+                    <span class="module-number">MÓDULO 2</span>
+                    <h3 class="module-title">2 Nefi</h3>
+                    <p class="module-desc">La llegada a la tierra prometida, las enseñanzas de Jacob e Isaías.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 3 -->
+                <div id="card-mod-3" class="module-card locked" onclick="window.game.loadModule(3)">
+                    <span class="module-number">MÓDULO 3</span>
+                    <h3 class="module-title">Jacob - Enoc</h3>
+                    <p class="module-desc">Las enseñanzas de Jacob, el arrepentimiento de Enós y la fidelidad de Jarom.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 4 -->
+                <div id="card-mod-4" class="module-card locked" onclick="window.game.loadModule(4)">
+                    <span class="module-number">MÓDULO 4</span>
+                    <h3 class="module-title">Mosíah</h3>
+                    <p class="module-desc">El discurso del Rey Benjamín y los viajes de Abinadí y Alma padre.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 5 -->
+                <div id="card-mod-5" class="module-card locked" onclick="window.game.loadModule(5)">
+                    <span class="module-number">MÓDULO 5</span>
+                    <h3 class="module-title">Alma</h3>
+                    <p class="module-desc">Las misiones de Alma hijo, Amulek y los hijos de Mosíah.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 6 -->
+                <div id="card-mod-6" class="module-card locked" onclick="window.game.loadModule(6)">
+                    <span class="module-number">MÓDULO 6</span>
+                    <h3 class="module-title">Helamán</h3>
+                    <p class="module-desc">Los 2,000 guerreros de Helamán y la gran profecía de Samuel el lamanita.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 7 -->
+                <div id="card-mod-7" class="module-card locked" onclick="window.game.loadModule(7)">
+                    <span class="module-number">MÓDULO 7</span>
+                    <h3 class="module-title">3 Nefi</h3>
+                    <p class="module-desc">La gran destrucción y la gloriosa aparición de Jesucristo en las Américas.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+
+                <!-- Module 8 -->
+                <div id="card-mod-8" class="module-card locked" onclick="window.game.loadModule(8)">
+                    <span class="module-number">MÓDULO 8</span>
+                    <h3 class="module-title">Éter - Moroni</h3>
+                    <p class="module-desc">La caída de la civilización Jaredita, los últimos escritos de Mormón y Moroni.</p>
+                    <span class="status-badge locked-badge">🔒 Bloqueado</span>
+                </div>
+            </div>
+
+            <div class="menu-actions">
+                <button class="btn-premium" onclick="window.game.loadModule(1)">Iniciar Módulo 1 ⚔️</button>
+                <button class="btn-secondary" onclick="window.game.showGallery()">Galería de Héroes 🛡️</button>
+            </div>
+        </div>
+
+        <!-- LEVEL SELECTOR SCREEN -->
+        <div id="level-selector-screen" class="overlay-screen">
+            <button class="close-btn" onclick="window.game.showMenu()">✖</button>
+            <h2 id="level-selector-title" style="font-family:'Cinzel'; color:#ffd700; font-size:28px; margin-bottom:10px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);">MÓDULO 1: 1 NEFI</h2>
+            <p style="font-size:12px; color:#b8b3d0; margin-bottom:25px; letter-spacing:2px; text-transform:uppercase;">Selecciona la Etapa de tu Aventura</p>
+            
+            <div id="level-buttons-container" class="level-buttons-grid">
+                <!-- Level Cards dynamically populated by Javascript -->
+            </div>
+            
+            <button class="btn-secondary" style="margin-top:25px;" onclick="window.game.showMenu()">Volver al Menú 🏠</button>
+        </div>
+
+        <!-- LOADING LEVEL TRANSITION SCREEN -->
+        <div id="loading-screen" class="overlay-screen">
+            <div class="loading-wrapper">
+                <h2 id="loading-ref" style="font-family:'Cinzel'; color:#ffd700; margin-bottom:15px; font-size:20px;">CARGANDO...</h2>
+                <div class="loading-bar-container">
+                    <div id="loading-progress" class="loading-bar"></div>
+                </div>
+                <div class="quote-container">
+                    <p id="loading-quote" class="loading-quote">"El Señor preparará una vía"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEVEL INTRO SCREEN -->
+        <div id="level-intro-screen" class="overlay-screen">
+            <h2 id="intro-title" style="font-family:'Cinzel'; color:#ffd700; font-size:28px; margin-bottom:15px; letter-spacing:2px;">INTRODUCCIÓN</h2>
+            <div class="finish-container" style="max-width: 650px; gap: 15px;">
+                <p id="intro-text" class="scripture-highlight" style="font-size:14px; text-align:justify; padding: 20px; line-height: 1.6; border-color: rgba(255, 215, 0, 0.4); background: rgba(255, 215, 0, 0.03); max-height: 250px; overflow-y: auto;"></p>
+                
+                <div class="stat-item" style="width: 100%; margin-bottom: 5px; background: rgba(255, 255, 255, 0.01);">
+                    <span class="stat-label" style="text-align: center; font-size: 10px; color: #b8b3d0;">Objetivo de la Misión</span>
+                    <span id="intro-objective" style="font-size:14px; color:#ffd700; font-weight:bold; margin-top:5px; text-align:center; letter-spacing: 0.5px;"></span>
+                </div>
+                
+                <button class="btn-premium" onclick="window.game.startLevelGameplay()" style="margin-top: 10px;">Iniciar Nivel ⚔️</button>
+            </div>
+        </div>
+
+        <!-- LEVEL COMPLETED SCREEN -->
+        <div id="level-finish-screen" class="overlay-screen">
+            <h2 style="font-family:'Cinzel'; color:#ffd700; font-size:32px; margin-bottom:10px;">¡NIVEL COMPLETADO!</h2>
+            <div class="finish-container">
+                <p id="lvl-spiritual-text" class="scripture-highlight">"Cuando Dios manda, hay un camino preparado."</p>
+                <p id="lvl-scripture-ref" style="font-size:12px; color:#ffd700; margin-top:-5px; font-weight:bold; letter-spacing:1px; margin-bottom:20px;">- 1 Nefi 3:7</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Puntaje Nivel</span>
+                        <span id="lvl-score-value" class="stat-value">0 PTS</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Bono de Fe</span>
+                        <span id="lvl-bonus-value" class="stat-value">0 PTS</span>
+                    </div>
+                </div>
+
+                <button class="btn-premium" onclick="window.game.nextLevel()">Siguiente Nivel ➔</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER SCREEN (Perdiste la fe) -->
+        <div id="game-over-screen" class="overlay-screen">
+            <h2 style="font-family:'Cinzel'; color:#ff3d00; font-size:32px; margin-bottom:10px; text-shadow: 0 0 15px rgba(255, 61, 0, 0.4);">SE HA AGOTADO TU FE 💀</h2>
+            <div class="finish-container">
+                <p id="game-over-quote" class="scripture-highlight" style="border-color: rgba(255, 61, 0, 0.4); background: rgba(255, 61, 0, 0.04); color: #ff8a80; font-size: 14px; max-width: 550px;">"Confía en el Señor, Él renovará tus fuerzas."</p>
+                <p style="font-size:12px; color:#ff8a80; margin-top:-5px; font-weight:bold; letter-spacing:1px; margin-bottom:20px;">- Reflexión de las Escrituras</p>
+                
+                <button class="btn-premium" onclick="window.game.retryLevel()" style="background: linear-gradient(135deg, #d32f2f, #ff5252); box-shadow: 0 4px 15px rgba(211, 47, 47, 0.3);">Reintentar Nivel 🔄</button>
+            </div>
+        </div>
+
+        <!-- MODULE COMPLETED SCREEN -->
+        <div id="module-finish-screen" class="overlay-screen">
+            <h2 style="font-family:'Cinzel'; color:#ffd700; font-size:36px; margin-bottom:10px;">MÓDULO COMPLETADO 🏆</h2>
+            <div class="finish-container">
+                <p class="scripture-highlight">"Y sucedió que Nefi y su familia llegaron a salvo a la tierra prometida. Aprendieron que cuando confiamos en Dios, Él nos guía a través de las tormentas de la vida."</p>
+                
+                <div class="stat-item" style="width:100%; margin-bottom:15px;">
+                    <span class="stat-label" style="text-align:center;">Puntaje Final del Módulo</span>
+                    <span id="mod-total-score" class="stat-value" style="text-align:center; font-size:32px;">0 PUNTOS</span>
+                </div>
+
+                <div class="menu-actions">
+                    <button class="btn-premium" onclick="window.game.showMenu()">Volver al Menú 🏠</button>
+                    <button class="btn-secondary" onclick="window.game.restartModule()">Repetir Módulo 🔄</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEROES GALLERY SCREEN -->
+        <div id="char-gallery" class="overlay-screen">
+            <button class="close-btn" onclick="window.game.showMenu()">✖</button>
+            <h2 style="font-family:'Cinzel'; color:#ffd700; font-size:30px; margin-bottom:10px;">GALERÍA DE HÉROES</h2>
+            <p style="font-size:12px; color:#b8b3d0; margin-bottom:15px; letter-spacing:1px; text-transform:uppercase;">Personajes Desbloqueados</p>
+
+            <div class="gallery-grid">
+                <!-- Nefi -->
+                <div class="gallery-card">
+                    <div class="char-avatar-container">🛡️</div>
+                    <h4 class="char-name">Nefi</h4>
+                    <p style="color:#00bfff; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Líder Fiel</p>
+                    <p class="char-desc">Valiente e incansable. Siempre dispuesto a obedecer: "Iré y haré lo que el Señor ha mandado".</p>
+                </div>
+
+                <!-- Lehi -->
+                <div class="gallery-card">
+                    <div class="char-avatar-container" style="border-color:#ff9800;">📖</div>
+                    <h4 class="char-name">Lehí</h4>
+                    <p style="color:#ff9800; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Profeta Visionario</p>
+                    <p class="char-desc">Lideró la huida de Jerusalén. Recibió la Liahona en el desierto para guiar su viaje.</p>
+                </div>
+
+                <!-- Saríah -->
+                <div class="gallery-card">
+                    <div class="char-avatar-container" style="border-color:#e040fb;">👩</div>
+                    <h4 class="char-name">Saríah</h4>
+                    <p style="color:#e040fb; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Madre Fiel</p>
+                    <p class="char-desc">Madre de familia y consoladora. Cruzó el desierto con gran fe a pesar del sufrimiento.</p>
+                </div>
+
+                <!-- Jacob -->
+                <div id="card-char-jacob" class="gallery-card locked">
+                    <div class="char-avatar-container locked-char" style="border-color:#9e9e9e;">🔒</div>
+                    <h4 class="char-name">Jacob</h4>
+                    <p style="color:#9e9e9e; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Sacerdote y Poeta</p>
+                    <p class="char-desc">Hermano de Nefi. Enseñó las doctrinas del albedrío, la caída y la expiación de Cristo.</p>
+                </div>
+            </div>
+
+            <button class="btn-premium" style="margin-top:15px;" onclick="window.game.showMenu()">Volver 🏠</button>
+        </div>
+
+        <!-- TRANSPARENT TOUCH CONTROLS (Active only on mobile device interfaces) -->
+        <div id="touch-layout" class="touch-controls">
+            <div class="btn-tactil" id="btn-izq">◀</div>
+            <div class="btn-tactil" id="btn-der">▶</div>
+            <div class="btn-tactil" id="btn-abajo">▼</div>
+            <div class="btn-tactil" id="btn-ataque">⚔️</div>
+            <div class="btn-tactil" id="btn-salto">▲</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="module1.js"></script>
+    <script src="module2.js"></script>
+    <script src="game.js"></script>
+
+    <script>
+        function toggleFullscreen() {
+            const container = document.getElementById("game-wrapper");
+            const btn = document.getElementById("btn-fullscreen");
+            
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                }
+                btn.innerText = "Salir ✖";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+                btn.innerText = "Pantalla Completa 📺";
+            }
+        }
+    </script>
+</body>
+</html>
