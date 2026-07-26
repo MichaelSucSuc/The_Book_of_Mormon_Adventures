@@ -62,35 +62,40 @@ class GameController {
         // Notifications
         this.notification = { text: "", timer: 0 };
 
-        // Progress variables (All modules unlocked for testing)
+        // Progress variables (All modules unlocked for testing, but saved progress can overwrite)
         this.moduleProgress = {
-            1: true,
-            2: true,
-            3: true,
-            4: true,
-            5: true,
-            6: true,
-            7: true,
-            8: true
+            1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 11: true
         };
 
-        // Level lock status (All levels unlocked for testing)
+        // Level lock status matching proposed levels per module
         this.levelProgress = {
             1: [true, true, true, true],
             2: [true, true, true, true],
-            3: [true, true, true, true],
+            3: [true, true, true],
             4: [true, true, true, true],
-            5: [true, true, true, true],
-            6: [true, true, true, true],
-            7: [true, true, true, true],
-            8: [true, true, true, true]
+            5: [true, true, true],
+            6: [true, true, true],
+            7: [true, true],
+            8: [true, true, true],
+            9: [true, true],
+            10: [true, true],
+            11: [true, true]
         };
+
+        // Stars collection per level (Star 1: Completed, Star 2: 3 Hearts, Star 3: Perfect Quiz)
+        this.levelStars = {
+            1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: []
+        };
+
+        this.deathsInCurrentLevel = 0;
+        this.streakDays = 0;
 
         // Characters gallery data
         this.characters = [
             { id: "nefi", name: "Nefi", role: "Protagonista", desc: "Un joven fuerte y fiel que confía plenamente en el Señor. Construyó el barco y guió a su familia.", unlocked: true },
             { id: "lehi", name: "Lehí", role: "Profeta", desc: "Padre de Nefi. Guió a su familia fuera de Jerusalén siguiendo la visión de la destrucción.", unlocked: true },
-            { id: "sariah", name: "Saríah", role: "Matriarca", desc: "Madre fiel de Nefi. Soportó con paciencia y fe las dificultades del desierto.", unlocked: true }
+            { id: "sariah", name: "Saríah", role: "Matriarca", desc: "Madre fiel de Nefi. Soportó con paciencia y fe las dificultades del desierto.", unlocked: true },
+            { id: "jacob", name: "Jacob", role: "Sacerdote", desc: "Hermano de Nefi. Enseñó las doctrinas del albedrío, la oposición y la redención.", unlocked: true }
         ];
 
         // End of Level panel details
@@ -99,6 +104,10 @@ class GameController {
             scriptureRef: "",
             bonusPoints: 0
         };
+
+        // Load progress & streak logic
+        this.loadProgress();
+        this.updateStreak();
 
         this.initEvents();
         this.resizeCanvas();
@@ -232,6 +241,7 @@ class GameController {
 
         if (this.player.fe <= 0) {
             // Game Over trigger
+            this.deathsInCurrentLevel = (this.deathsInCurrentLevel || 0) + 1;
             this.state = "GAME_OVER";
             document.getElementById("touch-layout").classList.remove("active");
             
@@ -312,7 +322,15 @@ class GameController {
     loadLevel(levelIndex) {
         this.state = "LOADING";
         this.currentLevelIndex = levelIndex;
-        this.player.fe = 3;
+        
+        let startFe = 3;
+        if (this.deathsInCurrentLevel >= 3) {
+            startFe = 4;
+            setTimeout(() => {
+                this.showNotification("✨ ¡Dificultad adaptada! Se te ha concedido el Escudo de Fe (+1 Vida) para ayudarte.");
+            }, 3000);
+        }
+        this.player.fe = startFe;
         this.player.inmune = 0;
         this.player.velX = 0;
         this.player.velY = 0;
@@ -356,23 +374,216 @@ class GameController {
     }
 
     completeLevel(spiritualText, scriptureRef, bonus) {
+        this.tempQuizData = { spiritualText, scriptureRef, bonus };
+        
+        if (!this.currentModule) {
+            this.currentModule = window["module" + this.currentModuleId];
+        }
+        const lvl = this.currentModule.levels[this.currentLevelIndex];
+        
+        if (lvl.quiz && lvl.quiz.length > 0) {
+            this.showQuiz(lvl.quiz);
+        } else {
+            this.showFinishScreen();
+        }
+    }
+
+    showQuiz(quizQuestions) {
+        this.state = "FIN_NIVEL_QUIZ";
+        this.currentQuizQuestions = quizQuestions;
+        this.currentQuestionIndex = 0;
+        this.quizFailedAny = false;
+
+        document.getElementById("touch-layout").classList.remove("active");
+        document.querySelectorAll(".overlay-screen").forEach(s => s.classList.remove("active"));
+        document.getElementById("quiz-screen").classList.add("active");
+
+        this.presentQuizQuestion();
+    }
+
+    presentQuizQuestion() {
+        const qData = this.currentQuizQuestions[this.currentQuestionIndex];
+        document.getElementById("quiz-question").innerText = qData.pregunta;
+        
+        const optionsContainer = document.getElementById("quiz-options");
+        optionsContainer.innerHTML = "";
+        
+        document.getElementById("quiz-feedback").style.display = "none";
+
+        qData.opciones.forEach((opt, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "quiz-option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => this.handleQuizAnswer(idx, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    handleQuizAnswer(selectedIndex, clickedBtn) {
+        const qData = this.currentQuizQuestions[this.currentQuestionIndex];
+        const correctIndex = qData.correctaIndex;
+        
+        const buttons = document.querySelectorAll(".quiz-option-btn");
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            clickedBtn.classList.add("correct");
+            window.gameAudio.playWin && window.gameAudio.playWin();
+            document.getElementById("quiz-feedback-text").innerText = `✨ ¡Excelente! ${qData.explicacion}`;
+        } else {
+            clickedBtn.classList.add("wrong");
+            buttons[correctIndex].classList.add("correct");
+            this.quizFailedAny = true;
+            window.gameAudio.playHurt && window.gameAudio.playHurt();
+            document.getElementById("quiz-feedback-text").innerText = `💡 ${qData.explicacion}`;
+        }
+        document.getElementById("quiz-feedback").style.display = "block";
+    }
+
+    finishQuiz() {
+        this.currentQuestionIndex++;
+        if (this.currentQuestionIndex < this.currentQuizQuestions.length) {
+            this.presentQuizQuestion();
+        } else {
+            document.getElementById("quiz-screen").classList.remove("active");
+            this.showFinishScreen();
+        }
+    }
+
+    showFinishScreen() {
         this.state = "FIN_NIVEL";
-        this.endLevelDetails.spiritualText = spiritualText;
-        this.endLevelDetails.scriptureRef = scriptureRef;
-        this.endLevelDetails.bonusPoints = bonus;
+        const details = this.tempQuizData;
+        this.endLevelDetails.spiritualText = details.spiritualText;
+        this.endLevelDetails.scriptureRef = details.scriptureRef;
+        this.endLevelDetails.bonusPoints = details.bonus;
         this.totalScore += this.score;
 
         window.gameAudio.playWin();
 
-        // Show level completed overlay
+        const star1 = true;
+        const star2 = this.player.fe >= 3;
+        const star3 = !this.quizFailedAny;
+
+        if (!this.levelStars[this.currentModuleId]) {
+            this.levelStars[this.currentModuleId] = [];
+        }
+        this.levelStars[this.currentModuleId][this.currentLevelIndex] = [star1, star2, star3];
+
+        this.deathsInCurrentLevel = 0;
+        this.saveProgress();
+
         document.getElementById("touch-layout").classList.remove("active");
+        document.getElementById("lvl-spiritual-text").innerText = `"${details.spiritualText}"`;
+        document.getElementById("lvl-scripture-ref").innerText = `- ${details.scriptureRef}`;
         
-        document.getElementById("lvl-spiritual-text").innerText = `"${spiritualText}"`;
-        document.getElementById("lvl-scripture-ref").innerText = `- ${scriptureRef}`;
-        document.getElementById("lvl-bonus-value").innerText = `+${bonus} PTS`;
+        const starsText = (star1 ? "⭐" : "☆") + (star2 ? "⭐" : "☆") + (star3 ? "⭐" : "☆");
+        document.getElementById("lvl-bonus-value").innerHTML = `<span style="font-size:20px; color:#ffd700;">${starsText}</span><br>+${details.bonus} PTS`;
         document.getElementById("lvl-score-value").innerText = `${this.score} PTS`;
         
         document.getElementById("level-finish-screen").classList.add("active");
+    }
+
+    saveProgress() {
+        localStorage.setItem("bom_moduleProgress", JSON.stringify(this.moduleProgress));
+        localStorage.setItem("bom_levelProgress", JSON.stringify(this.levelProgress));
+        localStorage.setItem("bom_levelStars", JSON.stringify(this.levelStars));
+        localStorage.setItem("bom_totalScore", this.totalScore.toString());
+    }
+
+    loadProgress() {
+        try {
+            const modProg = localStorage.getItem("bom_moduleProgress");
+            if (modProg) this.moduleProgress = JSON.parse(modProg);
+
+            const lvlProg = localStorage.getItem("bom_levelProgress");
+            if (lvlProg) this.levelProgress = JSON.parse(lvlProg);
+
+            const lvlStars = localStorage.getItem("bom_levelStars");
+            if (lvlStars) this.levelStars = JSON.parse(lvlStars);
+
+            const totScore = localStorage.getItem("bom_totalScore");
+            if (totScore) this.totalScore = parseInt(totScore) || 0;
+        } catch (e) {
+            console.error("Error loading progress", e);
+        }
+    }
+
+    updateStreak() {
+        const todayStr = new Date().toDateString();
+        const lastPlay = localStorage.getItem("bom_lastPlayDate");
+        let streak = parseInt(localStorage.getItem("bom_streakCount") || "0");
+
+        if (lastPlay) {
+            const lastDate = new Date(lastPlay);
+            const diffTime = Math.abs(new Date() - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                streak += 1;
+            } else if (diffDays > 1) {
+                streak = 1;
+            }
+        } else {
+            streak = 1;
+        }
+
+        localStorage.setItem("bom_lastPlayDate", todayStr);
+        localStorage.setItem("bom_streakCount", streak.toString());
+        this.streakDays = streak;
+    }
+
+    refreshUI() {
+        const streakEl = document.getElementById("streak-days");
+        if (streakEl) {
+            streakEl.innerText = this.streakDays || 0;
+        }
+
+        let totalLevels = 0;
+        let completedLevels = 0;
+        for (let mId = 1; mId <= 11; mId++) {
+            if (this.levelProgress[mId]) {
+                this.levelProgress[mId].forEach(unlocked => {
+                    totalLevels++;
+                    if (unlocked) completedLevels++;
+                });
+            }
+        }
+        let progressPercent = totalLevels > 0 ? Math.round((completedLevels / totalLevels) * 100) : 0;
+        progressPercent = Math.min(100, progressPercent);
+
+        const progressPercentEl = document.getElementById("journey-percent");
+        if (progressPercentEl) {
+            progressPercentEl.innerText = `${progressPercent}%`;
+        }
+        const progressBarInner = document.getElementById("journey-bar-inner");
+        if (progressBarInner) {
+            progressBarInner.style.width = `${progressPercent}%`;
+        }
+
+        const relics = {
+            1: ["relic-bronce", "relic-liahona", "relic-espada"],
+            2: ["relic-templo"],
+            5: ["relic-escudo"],
+            6: ["relic-titulo"],
+            10: ["relic-piedras"],
+            11: ["relic-oro"]
+        };
+
+        for (let mId in relics) {
+            const nextMod = parseInt(mId) + 1;
+            const completed = this.moduleProgress[nextMod] || (mId === "11" && this.levelProgress[11] && this.levelProgress[11].every(l => l));
+            
+            relics[mId].forEach(relicId => {
+                const el = document.getElementById(relicId);
+                if (el) {
+                    if (completed) {
+                        el.classList.remove("locked");
+                    } else {
+                        el.classList.add("locked");
+                    }
+                }
+            });
+        }
     }
 
     loadModule(moduleId) {
@@ -456,9 +667,10 @@ class GameController {
 
         // Unlock next module
         const nextModuleId = this.currentModuleId + 1;
-        if (nextModuleId <= 8) {
+        if (nextModuleId <= 11) {
             this.moduleProgress[nextModuleId] = true;
         }
+        this.saveProgress();
 
         document.getElementById("mod-total-score").innerText = `${this.totalScore} PUNTOS`;
         document.getElementById("module-finish-screen").classList.add("active");
@@ -475,7 +687,7 @@ class GameController {
         document.getElementById("touch-layout").classList.remove("active");
         
         // Refresh lock icons on menu cards dynamically
-        for (let mId = 2; mId <= 8; mId++) {
+        for (let mId = 2; mId <= 11; mId++) {
             const card = document.getElementById("card-mod-" + mId);
             if (card) {
                 const badge = card.querySelector(".status-badge");
@@ -525,6 +737,7 @@ class GameController {
             }
         }
 
+        this.refreshUI();
         document.getElementById("main-menu").classList.add("active");
     }
 
@@ -693,6 +906,16 @@ class GameController {
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Control Menu Button Visibility
+        const menuBtn = document.getElementById("btn-game-menu");
+        if (menuBtn) {
+            if (this.state === "JUGANDO" || this.state === "DIALOGO" || this.state === "INTRO") {
+                menuBtn.style.display = "block";
+            } else {
+                menuBtn.style.display = "none";
+            }
+        }
+
         if (this.state === "JUGANDO") {
             if (!this.currentModule) {
                 this.currentModule = window["module" + this.currentModuleId];
@@ -701,6 +924,22 @@ class GameController {
             
             // Draw Level backgrounds/platforms
             lvl.draw(this.ctx, this, this.gameFrame, this.camaraX);
+
+            // Draw run dust particles when player is moving fast on ground (graphics enhancement)
+            if (Math.abs(this.player.velX) > 1.5 && this.player.grounded) {
+                this.ctx.save();
+                this.ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+                for (let i = 0; i < 3; i++) {
+                    let pSeed = this.gameFrame + i * 15;
+                    let px = this.player.x + (this.player.direccion === "derecha" ? 5 : this.player.width - 5) - this.camaraX - (pSeed % 20) * (this.player.direccion === "derecha" ? 1 : -1);
+                    let py = this.player.y + this.player.height - 2 - (pSeed % 10);
+                    let rad = 2 + (pSeed % 4);
+                    this.ctx.beginPath();
+                    this.ctx.arc(px, py, rad, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                this.ctx.restore();
+            }
 
             // Draw player sprite
             if (this.player.inmune === 0 || Math.floor(this.gameFrame / 4) % 2 === 0) {
@@ -717,14 +956,22 @@ class GameController {
                 this.drawHUD();
             }
 
-            // Draw Notification popups
-            if (this.notification.timer > 0) {
+            // Draw Notification popups (Only if dialogue is NOT active to prevent overlapping)
+            if (this.notification.timer > 0 && !this.dialogueActive) {
                 this.drawNotificationBox();
             }
         }
     }
 
     drawPlayerSprite(x, y, w, h) {
+        // Draw character drop shadow for grounded premium looks
+        this.ctx.save();
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+        this.ctx.beginPath();
+        this.ctx.ellipse(x + w/2, y + h - 2, 16, 5, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+
         if (this.playerCharacter === "lehi") {
             this.drawLehiSprite(x, y, w, h);
         } else {

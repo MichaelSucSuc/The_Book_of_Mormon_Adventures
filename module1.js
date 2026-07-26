@@ -103,8 +103,8 @@ const module1 = {
 
                 // Dialogues
                 game.dialogueQueue = [
-                    { char: "Lehí", text: "Familia mía, he visto en visión que Jerusalén será destruida si no se arrepiente. El Señor nos ha mandado huir al desierto y abandonar nuestro oro y plata." },
-                    { char: "Nefi", text: "Padre, confiaremos en la revelación del Señor. Dejaremos nuestras riquezas y te seguiremos al desierto." }
+                    { char: "Lehí", text: "He visto en visión que Jerusalén será destruida. ¡Debemos huir al desierto ahora!" },
+                    { char: "Nefi", text: "Te seguiremos, padre. Confiamos en lo que el Señor te ha revelado." }
                 ];
                 game.startDialogue();
 
@@ -139,8 +139,8 @@ const module1 = {
                 if (!this.sariahDialogueTriggered && game.player.x > 1600 && game.player.grounded && Math.abs(game.player.velX) < 2) {
                     this.sariahDialogueTriggered = true;
                     game.dialogueQueue = [
-                        { char: "Saríah", text: "¿Estás seguro de que esto es lo correcto, Lehí? Hemos dejado todo nuestro oro y nuestro hogar por el desierto." },
-                        { char: "Lehí", text: "Saríah, confía en el Señor. Jerusalén ciertamente será destruida si nos quedamos. Él nos guiará." }
+                        { char: "Saríah", text: "¿Es seguro este viaje? Dejamos nuestro hogar por el desierto." },
+                        { char: "Lehí", text: "Confía en el Señor. Él nos guiará a salvo." }
                     ];
                     game.startDialogue();
                 }
@@ -149,11 +149,11 @@ const module1 = {
                 if (!this.valleyDialogueTriggered && game.player.x > 3300 && game.player.grounded && Math.abs(game.player.velX) < 2) {
                     this.valleyDialogueTriggered = true;
                     game.dialogueQueue = [
-                        { char: "Lehí", text: "Hemos llegado al Valle de Lemuel, cerca de las orillas del Mar Rojo. Aquí armaremos nuestras tiendas y descansaremos." },
-                        { char: "Nefi", text: "Construiré un altar de piedras, padre, para que demos gracias y ofrezcamos sacrificios al Señor por habernos librado." },
-                        { char: "Lehí", text: "¡Oh Lamán, que seas como este río, fluyendo continuamente en la senda de la rectitud! ¡Y tú, Lemuel, que seas como este valle, firme y constante en guardar los mandamientos!" },
-                        { char: "Lehí", text: "Pero vuestra fe se pondrá a prueba. El Señor me ha mandado en un sueño que vosotros, mis hijos, debéis regresar a Jerusalén para obtener las Planchas de Bronce de Labán." },
-                        { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado! Regresaremos a la ciudad, padre. Sé que el Señor preparará una vía para que cumplamos Su mandato." }
+                        { char: "Lehí", text: "Hemos llegado al Valle de Lemuel. Aquí armaremos nuestras tiendas." },
+                        { char: "Nefi", text: "Construiré un altar de piedras para dar gracias al Señor." },
+                        { char: "Lehí", text: "¡Lamán, sé como este río, fluyendo en rectitud! ¡Lemuel, sé firme como este valle!" },
+                        { char: "Lehí", text: "Hijos míos, debéis regresar a Jerusalén para obtener las Planchas de Bronce de Labán." },
+                        { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado! Sé que Él preparará una vía." }
                     ];
                     game.startDialogue();
                 }
@@ -862,6 +862,35 @@ const module1 = {
                     ctx.restore();
                 });
                 ctx.restore();
+
+                // Draw end level guide arrow (pointing to tents at x = 3380)
+                if (game.player.x > 2600) {
+                    let pulse = Math.sin(gameFrame * 0.15) * 8;
+                    ctx.save();
+                    ctx.translate(-camaraX, 0);
+                    ctx.fillStyle = "#ffd700";
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.lineWidth = 2.5;
+                    ctx.shadowColor = "#ffd700";
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.moveTo(3380, 290 + pulse);
+                    ctx.lineTo(3355, 255 + pulse);
+                    ctx.lineTo(3370, 255 + pulse);
+                    ctx.lineTo(3370, 220 + pulse);
+                    ctx.lineTo(3390, 220 + pulse);
+                    ctx.lineTo(3390, 255 + pulse);
+                    ctx.lineTo(3405, 255 + pulse);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 13px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("TIENDAS (META) ⬇", 3380, 205 + pulse);
+                    ctx.restore();
+                }
             }
         },
 
