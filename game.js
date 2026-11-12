@@ -1479,11 +1479,11 @@ class GameController {
 
     drawNotificationBox() {
         this.ctx.save();
-        this.ctx.fillStyle = "rgba(12, 8, 31, 0.9)";
+        this.ctx.fillStyle = "rgba(12, 8, 31, 0.95)";
         this.ctx.strokeStyle = "#00bfff";
         this.ctx.lineWidth = 1.5;
-        this.ctx.fillRect(112, 80, 800, 52);
-        this.ctx.strokeRect(112, 80, 800, 52);
+        this.ctx.fillRect(112, 240, 800, 52);
+        this.ctx.strokeRect(112, 240, 800, 52);
 
         this.ctx.textAlign = "center";
         if (this.notification.text.includes("|")) {
@@ -1492,16 +1492,16 @@ class GameController {
             // Draw Pista line
             this.ctx.fillStyle = "#ffe082"; // soft yellow/gold
             this.ctx.font = "bold 11px Outfit";
-            this.ctx.fillText(parts[0].trim(), 512, 101);
+            this.ctx.fillText(parts[0].trim(), 512, 261);
             
             // Draw Reflexión line
             this.ctx.fillStyle = "#e0f7fa"; // soft cyan/white
             this.ctx.font = "italic 11px Outfit";
-            this.ctx.fillText(parts[1].trim(), 512, 121);
+            this.ctx.fillText(parts[1].trim(), 512, 281);
         } else {
             this.ctx.fillStyle = "#ffffff";
             this.ctx.font = "bold 12px Outfit";
-            this.ctx.fillText(this.notification.text, 512, 111);
+            this.ctx.fillText(this.notification.text, 512, 271);
         }
         
         this.ctx.restore();

@@ -7,31 +7,57 @@ const module1 = {
     enseñanzas: ["Fe y obediencia", "Escrituras de Bronce", "Construcción con fe", "Guiados por la Liahona"],
     unlocked: true,
     levels: [
-        // LEVEL 1: Escape from Jerusalem (Escort & Tutorial)
+        // LEVEL 1: Escape from Jerusalem (Escort, Abandoning Riches, Gathering Supplies & Altar of Thanks)
         {
             id: 1,
             name: "Jerusalén - La Huida de Lehí",
-            desc: "Lleva a tu familia a salvo fuera de Jerusalén hacia el desierto.",
-            maxScroll: 3800,
-            
+            desc: "Obedece el mandamiento del Señor: deja atrás tus riquezas y guía a tu familia por el desierto hasta el Valle de Lemuel.",
+            maxScroll: 4200,
+
             // Level introduction data
-            introTitle: "Jerusalén: La Huida de Lehí",
-            introText: "Año 600 a.C. El Señor ha mandado al profeta Lehí salir de Jerusalén con su familia e internarse en el desierto para salvar sus vidas de la inminente destrucción. Sin embargo, los líderes y guardias de la ciudad nos persiguen hostilmente para capturarnos por haber testificado contra su maldad. Debemos huir de prisa con nuestra familia, evitar a las patrullas que nos siguen y avanzar con fe.",
-            introObjective: "Llega al Valle de Lemuel guiando a tu familia y evadiendo a los guardias que te persiguen.",
+            introTitle: "Jerusalén: El Mandato de Salir al Desierto",
+            introText: "Año 600 a.C. Tras orar fervientemente por su pueblo, el profeta Lehí vio un pilar de fuego y recibió un libro celestial anunciando la inminente destrucción de Jerusalén. Al salir a testificar de sus abominaciones y del Redentor del mundo, los judíos se enfurecieron e intentaron quitarle la vida. Entonces el Señor le habló en un sueño: 'Bendito eres tú, Lehí... sal para el desierto con tu familia'. Lehí fue obediente y abandonó su casa, su tierra, su oro, su plata y sus objetos preciosos, llevando únicamente a su familia, provisiones y tiendas.",
+            introObjective: "Abandona las riquezas terrenales de Jerusalén, recoge provisiones y tiendas, guía a tu familia y edifica un altar de piedras en el Valle de Lemuel.",
             characterId: "lehi",
-            
+
+            // Reto de Fe (Quiz Doctrinal de Cierre)
+            quiz: [
+                {
+                    pregunta: "¿Por qué abandonó Lehí su casa, sus tierras, su oro y su plata para salir al desierto?",
+                    opciones: [
+                        "Para buscar yacimientos de metales preciosos en la península arábiga.",
+                        "Por obedecer el mandato de Dios recibido en un sueño para salvar a su familia de la destrucción.",
+                        "Para evadir el pago de tributos militares al rey de Babilonia."
+                    ],
+                    correctaIndex: 1,
+                    explicacion: "1 Nefi 2:2-4 enseña que Lehí fue obediente a la palabra del Señor, abandonando sus riquezas materiales terrenales y llevando solo a su familia, provisiones y tiendas."
+                },
+                {
+                    pregunta: "¿Por qué murmuraban con amargura Lamán y Lemuel en contra de su padre en el desierto?",
+                    opciones: [
+                        "Porque no conocían el proceder de Dios y creían que Lehí era un hombre visionario llevado por locas imaginaciones.",
+                        "Porque Lehí los obligaba a cargar todo el oro y la plata en sus espaldas.",
+                        "Porque querían construir un barco de inmediato en lugar de acampar en tiendas."
+                    ],
+                    correctaIndex: 0,
+                    explicacion: "1 Nefi 2:11-12 aclara que murmuraban por la dureza de su corazón, porque no creían que Jerusalén sería destruida ni conocían la manera de proceder del Señor."
+                }
+            ],
+
             init: function(game) {
                 game.player.x = 150;
                 game.player.y = 400;
                 game.score = 0;
                 game.player.fe = 3;
-                
-                // Tutorial messages
+
+                // Interactive Tutorial & Divine Guides
                 this.tutorials = [
-                    { x: 200, text: "Usa ◀ ▶ para caminar. ¡Tu familia te seguirá!", triggered: false },
-                    { x: 500, text: "Presiona Z (o ▲ en celular) para saltar muros.", triggered: false },
-                    { x: 900, text: "Presiona X (o ⚔️ en celular) para ahuyentar enemigos usando tu bastón de fe.", triggered: false },
-                    { x: 1300, text: "Presiona Abajo ▼ para agacharte y pasar por túneles.", triggered: false }
+                    { x: 180, text: "Observa los arcones: Lehí abandonó su oro y plata por obediencia (1 Nefi 2:4).", triggered: false },
+                    { x: 260, text: "Usa ◀ ▶ para caminar. ¡Tu amada familia seguirá tus pasos!", triggered: false },
+                    { x: 500, text: "Presiona Z (o ▲ en pantalla) para saltar muros y fosos.", triggered: false },
+                    { x: 920, text: "Presiona X (o ⚔️ en pantalla) para ahuyentar a los soldados y burlones con tu bastón de fe.", triggered: false },
+                    { x: 1320, text: "Presiona Abajo ▼ para agacharte al cruzar pasos estrechos.", triggered: false },
+                    { x: 3450, text: "¡Hemos llegado al río Lamán! Recoge las 3 piedras sagradas para el altar.", triggered: false }
                 ];
 
                 // Checkpoint
@@ -41,80 +67,114 @@ const module1 = {
                 this.family = [
                     { name: "Saríah", color: "#d2b48c", height: 88, offset: 35, healthy: true, jumping: false, jumpTimer: 0 },
                     { name: "Sam", color: "#a0522d", height: 90, offset: 70, healthy: true, jumping: false, jumpTimer: 0 },
-                    { name: "Lamán", color: "#555555", height: 94, offset: 105, healthy: true, jumping: false, jumpTimer: 0 },
-                    { name: "Lemuel", color: "#666666", height: 94, offset: 140, healthy: true, jumping: false, jumpTimer: 0 },
-                    { name: "Nefi", color: "#0a66d0", height: 85, offset: 175, healthy: true, jumping: false, jumpTimer: 0 }
+                    { name: "Lamán", color: "#555555", height: 94, offset: 105, healthy: true, jumping: false, jumpTimer: 0, murmuring: false },
+                    { name: "Lemuel", color: "#666666", height: 94, offset: 140, healthy: true, jumping: false, jumpTimer: 0, murmuring: false },
+                    { name: "Nefi", color: "#0a66d0", height: 86, offset: 175, healthy: true, jumping: false, jumpTimer: 0, praying: false }
                 ];
-                
+
                 // Position history buffer for snake following
                 this.positionHistory = [];
-                for(let i=0; i<300; i++) {
+                for (let i = 0; i < 400; i++) {
                     this.positionHistory.push({ x: 150, y: 400, agachado: false, jumping: false });
                 }
 
-                // Level layout
+                // Level layout: 3 Biomes (Jerusalén -> Desierto/Mar Rojo -> Valle de Lemuel)
                 this.platforms = [
-                    { x: 0, y: 500, width: 1400, height: 100, tipo: "suelo" },
+                    // ZONA 1: Jerusalén y Murallas (x: 0 a 1450)
+                    { x: 0, y: 500, width: 1450, height: 100, tipo: "suelo" },
                     { x: 450, y: 410, width: 150, height: 90, tipo: "muro" },
-                    { x: 800, y: 390, width: 220, height: 60, tipo: "plataforma" },
-                    { x: 1150, y: 350, width: 180, height: 60, tipo: "plataforma" },
-                    // Gap/Pit
-                    { x: 1550, y: 500, width: 1200, height: 100, tipo: "suelo" },
-                    { x: 1700, y: 380, width: 250, height: 60, tipo: "plataforma" },
-                    { x: 2100, y: 420, width: 150, height: 80, tipo: "bloque" },
-                    { x: 2400, y: 360, width: 200, height: 60, tipo: "plataforma" },
-                    // Gap/Pit
-                    { x: 2900, y: 500, width: 1200, height: 100, tipo: "suelo" },
-                    { x: 3000, y: 420, width: 300, height: 80, tipo: "bloque" }
+                    { x: 750, y: 390, width: 220, height: 60, tipo: "plataforma" },
+                    { x: 1100, y: 350, width: 180, height: 60, tipo: "plataforma" },
+
+                    // ZONA 2: Desierto y Riberas del Mar Rojo (x: 1600 a 2800)
+                    { x: 1600, y: 500, width: 1250, height: 100, tipo: "suelo" },
+                    { x: 1750, y: 390, width: 230, height: 50, tipo: "plataforma" },
+                    { x: 2100, y: 420, width: 160, height: 80, tipo: "bloque" },
+                    { x: 2400, y: 360, width: 220, height: 50, tipo: "plataforma" },
+
+                    // ZONA 3: Valle de Lemuel y Río Lamán (x: 2950 a 4200)
+                    { x: 2950, y: 500, width: 1250, height: 100, tipo: "suelo" },
+                    { x: 3100, y: 420, width: 200, height: 80, tipo: "bloque" },
+                    { x: 3400, y: 440, width: 220, height: 60, tipo: "plataforma" },
+                    { x: 3750, y: 470, width: 350, height: 80, tipo: "suelo" }
                 ];
 
+                // Architectural decorations
                 this.decorations = [
-                    { x: 100, y: 220, w: 200, h: 280, label: "Casa de Lehí" },
-                    { x: 600, y: 350, w: 80, h: 150, label: "Puerta Jerusalén" },
-                    { x: 1600, y: 450, w: 100, h: 50, label: "Ruinas" },
-                    { x: 3300, y: 380, w: 160, h: 120, label: "Tiendas de Lehí" }
+                    { x: 80, y: 220, w: 220, h: 280, label: "Casa de Lehí" },
+                    { x: 600, y: 350, w: 90, h: 150, label: "Puerta de Jerusalén" },
+                    { x: 1620, y: 440, w: 100, h: 60, label: "Roca del Desierto" },
+                    { x: 3320, y: 380, w: 180, h: 120, label: "Tiendas en el Valle" }
                 ];
 
                 // Torches placement for fire particle effects
                 this.torches = [
-                    { x: 580, y: 360 },
-                    { x: 690, y: 360 },
-                    { x: 1620, y: 430 },
+                    { x: 330, y: 440 },
+                    { x: 590, y: 360 },
+                    { x: 700, y: 360 },
+                    { x: 1640, y: 430 },
+                    { x: 2450, y: 330 },
                     { x: 3260, y: 390 }
                 ];
 
-                this.monedas = [
-                    { x: 350, y: 450, collected: false },
-                    { x: 880, y: 360, collected: false },
-                    { x: 920, y: 360, collected: false },
-                    { x: 1240, y: 320, collected: false },
-                    { x: 1800, y: 360, collected: false },
-                    { x: 2200, y: 350, collected: false },
-                    { x: 2500, y: 330, collected: false },
-                    { x: 3100, y: 360, collected: false }
+                // Supplies (Provisiones bíblicas - 1 Nefi 2:4)
+                // Se reemplazan las monedas por Odres de Agua, Sacos de Grano y Lienzos de Tienda
+                this.provisiones = [
+                    { x: 380, y: 450, tipo: "grano", name: "Saco de Trigo y Cebada", collected: false },
+                    { x: 860, y: 340, tipo: "agua", name: "Odre de Agua Fresca", collected: false },
+                    { x: 1180, y: 300, tipo: "tienda", name: "Lienzo de Tienda Familiar", collected: false },
+                    { x: 1800, y: 340, tipo: "agua", name: "Odre de Agua del Desierto", collected: false },
+                    { x: 2180, y: 370, tipo: "grano", name: "Saco de Higos y Frutos Secos", collected: false },
+                    { x: 2480, y: 310, tipo: "tienda", name: "Estacas de Campamento", collected: false },
+                    { x: 3050, y: 450, tipo: "grano", name: "Provisiones del Valle", collected: false },
+                    { x: 3250, y: 370, tipo: "agua", name: "Agua Dulce del Río Lamán", collected: false },
+                    { x: 3480, y: 400, tipo: "tienda", name: "Pabellón de Saríah", collected: false }
                 ];
 
+                // Interactive Altar of Stones (1 Nefi 2:7)
+                this.altar = {
+                    x: 3820,
+                    y: 440,
+                    width: 70,
+                    height: 50,
+                    stonesPlaced: 0,
+                    maxStones: 3,
+                    completed: false,
+                    flameIntensity: 0
+                };
+
+                // Uncut river stones to gather for the altar
+                this.altarStones = [
+                    { x: 3560, y: 455, collected: false, name: "Piedra de Cimiento" },
+                    { x: 3680, y: 400, collected: false, name: "Piedra de Ofrenda" },
+                    { x: 3760, y: 455, collected: false, name: "Piedra de Coronación" }
+                ];
+
+                // Enemies: Jerusalem Soldiers and Mockers (1 Nefi 1:19-20)
                 this.enemies = [
                     { x: 650, y: 428, type: "soldier", hp: 2, range: 100, startX: 650, dir: -1, width: 45, height: 72, speed: 2, state: "patrol" },
-                    { x: 1050, y: 428, type: "burlon", hp: 1, range: 80, startX: 1050, dir: 1, width: 40, height: 72, speed: 3, state: "patrol" },
+                    { x: 1020, y: 428, type: "burlon", hp: 1, range: 90, startX: 1020, dir: 1, width: 40, height: 72, speed: 3, state: "patrol" },
                     { x: 1950, y: 428, type: "soldier", hp: 2, range: 120, startX: 1950, dir: -1, width: 45, height: 72, speed: 2.2, state: "patrol" },
-                    { x: 2350, y: 428, type: "burlon", hp: 1, range: 100, startX: 2350, dir: -1, width: 40, height: 72, speed: 3, state: "patrol" }
+                    { x: 2320, y: 428, type: "burlon", hp: 1, range: 100, startX: 2320, dir: -1, width: 40, height: 72, speed: 2.8, state: "patrol" }
                 ];
 
-                // Dialogues
-                game.dialogueQueue = [
-                    { char: "Lehí", text: "He visto en visión que Jerusalén será destruida. ¡Debemos huir al desierto ahora!" },
-                    { char: "Nefi", text: "Te seguiremos, padre. Confiamos en lo que el Señor te ha revelado." }
-                ];
-                game.startDialogue();
-
+                // Dialogue State Triggers
                 this.sariahDialogueTriggered = false;
                 this.valleyDialogueTriggered = false;
+                this.altarDialogueTriggered = false;
                 this.finishSpiritualTextShown = false;
+
+                // Initial dialogue (1 Nefi 2:1-4)
+                game.dialogueQueue = [
+                    { char: "Lehí", text: "El Señor me habló en un sueño: 'Bendito eres tú, Lehí... he aquí, tratan de quitarte la vida. Sal para el desierto con tu familia'." },
+                    { char: "Saríah", text: "Dejaremos nuestra casa, nuestro oro y plata, Lehí. El Señor proveerá para nosotros en el desierto." },
+                    { char: "Nefi", text: "Iremos con fe, padre. El Señor jamás manda algo sin preparar una vía para que lo cumplamos." }
+                ];
+                game.startDialogue();
             },
 
             update: function(game, gameFrame, input) {
-                // Record history for family queue
+                // Record history for family snake following
                 this.positionHistory.unshift({
                     x: game.player.x,
                     y: game.player.y,
@@ -135,30 +195,34 @@ const module1 = {
                     member.jumping = histPos.jumping;
                 });
 
-                // Dialogue trigger middle - quiet moments only
-                if (!this.sariahDialogueTriggered && game.player.x > 1600 && game.player.grounded && Math.abs(game.player.velX) < 2) {
+                // Dialogue Trigger 1: Murmuring of Laman and Lemuel by the Red Sea (1 Nefi 2:11-14)
+                if (!this.sariahDialogueTriggered && game.player.x > 1700 && game.player.grounded && Math.abs(game.player.velX) < 2) {
                     this.sariahDialogueTriggered = true;
+                    this.family[2].murmuring = true; // Lamán
+                    this.family[3].murmuring = true; // Lemuel
                     game.dialogueQueue = [
-                        { char: "Saríah", text: "¿Es seguro este viaje? Dejamos nuestro hogar por el desierto." },
-                        { char: "Lehí", text: "Confía en el Señor. Él nos guiará a salvo." }
+                        { char: "Lamán", text: "¡Esto es una locura! Nos has sacado de la tierra de nuestra herencia, de nuestro oro y plata, para hacernos perecer en este desierto ardiente." },
+                        { char: "Lemuel", text: "¡Sí! ¡Eres un hombre visionario llevado por las locas imaginaciones de tu corazón! ¡Jerusalén jamás será destruida!" },
+                        { char: "Lehí", text: "¡Silencio y escuchad! El Señor destruirá la iniquidad de Jerusalén, mas Sus entrañables misericordias fortalecen a los que acuden a Él con fe." }
                     ];
                     game.startDialogue();
                 }
 
-                // Dialogue trigger arriving at Valley of Lemuel - quiet moments only
-                if (!this.valleyDialogueTriggered && game.player.x > 3300 && game.player.grounded && Math.abs(game.player.velX) < 2) {
+                // Dialogue Trigger 2: Arrival at Valley of Lemuel and River Laman (1 Nefi 2:8-10)
+                if (!this.valleyDialogueTriggered && game.player.x > 3380 && game.player.grounded && Math.abs(game.player.velX) < 2) {
                     this.valleyDialogueTriggered = true;
+                    this.family[2].murmuring = false;
+                    this.family[3].murmuring = false;
                     game.dialogueQueue = [
-                        { char: "Lehí", text: "Hemos llegado al Valle de Lemuel. Aquí armaremos nuestras tiendas." },
-                        { char: "Nefi", text: "Construiré un altar de piedras para dar gracias al Señor." },
-                        { char: "Lehí", text: "¡Lamán, sé como este río, fluyendo en rectitud! ¡Lemuel, sé firme como este valle!" },
-                        { char: "Lehí", text: "Hijos míos, debéis regresar a Jerusalén para obtener las Planchas de Bronce de Labán." },
-                        { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado! Sé que Él preparará una vía." }
+                        { char: "Lehí", text: "¡Alabado sea el Señor! Tras tres días por el desierto, hemos hallado este valle fértil y un río de aguas vivas que desagua en el Mar Rojo." },
+                        { char: "Lehí", text: "¡Oh Lamán, si fueras semejante a este río, fluyendo continuamente en la fuente de toda rectitud!" },
+                        { char: "Lehí", text: "¡Oh Lemuel, si fueras semejante a este valle, firme, constante e inmutable en guardar los mandamientos de Dios!" },
+                        { char: "Lehí", text: "Acerquémonos a la orilla del río para levantar un altar de piedras y dar gracias a nuestro Dios." }
                     ];
                     game.startDialogue();
                 }
 
-                // Update tutorials
+                // Update tutorial notifications
                 this.tutorials.forEach(t => {
                     if (!t.triggered && game.player.x >= t.x) {
                         t.triggered = true;
@@ -166,17 +230,68 @@ const module1 = {
                     }
                 });
 
+                // Update supplies collection (Provisiones)
+                this.provisiones.forEach(p => {
+                    if (!p.collected && game.collides(game.player, { x: p.x - 14, y: p.y - 14, width: 28, height: 28 })) {
+                        p.collected = true;
+                        game.score += 60;
+                        window.gameAudio.playCoin();
+                        game.showNotification("✨ Recogido: " + p.name + " (+60 PTS)");
+                    }
+                });
+
+                // Update Altar Stones Collection
+                let stonesCarried = 0;
+                this.altarStones.forEach(s => {
+                    if (!s.collected && game.collides(game.player, { x: s.x - 14, y: s.y - 14, width: 28, height: 28 })) {
+                        s.collected = true;
+                        window.gameAudio.playPowerUp();
+                        let totalGathered = this.altarStones.filter(st => st.collected).length;
+                        game.showNotification("🪨 " + s.name + " recogida (" + totalGathered + "/3). ¡Llévala al altar!");
+                    }
+                    if (s.collected) stonesCarried++;
+                });
+
+                // Build Altar Interaction (near x = 3820)
+                if (!this.altar.completed && stonesCarried > this.altar.stonesPlaced) {
+                    let distToAltar = Math.abs(game.player.x - this.altar.x);
+                    if (distToAltar < 70) {
+                        // Place stone automatically or with C/Attack key
+                        this.altar.stonesPlaced = stonesCarried;
+                        window.gameAudio.playPowerUp();
+
+                        if (this.altar.stonesPlaced < 3) {
+                            game.showNotification("Has colocado una piedra en el altar (" + this.altar.stonesPlaced + "/3).");
+                        } else {
+                            // Altar completed! Holy fire ignites
+                            this.altar.completed = true;
+                            this.altar.flameIntensity = 1.0;
+                            window.gameAudio.playWin();
+                            this.family[4].praying = true; // Nephi kneels in prayer
+
+                            // Final sacred dialogue: Altar of thanksgiving & Nephi's prayer (1 Nefi 2:7, 16-17)
+                            this.altarDialogueTriggered = true;
+                            game.dialogueQueue = [
+                                { char: "Lehí", text: "He erigido este altar de piedras y presento una ofrenda al Señor, dando gracias a Dios por preservar a mi familia." },
+                                { char: "Nefi", text: "Y yo, teniendo grandes deseos de conocer los misterios de Dios, clamé al Señor; y he aquí, Él me visitó y enterneció mi corazón, y creí todas las palabras de mi padre." },
+                                { char: "Sam", text: "Hermano Nefi, yo también creo de corazón en las cosas maravillosas que el Espíritu te ha manifestado." }
+                            ];
+                            game.startDialogue();
+                        }
+                    }
+                }
+
                 // Update enemies
                 this.enemies.forEach(e => {
                     if (e.hp <= 0) {
                         if (e.state !== "dead") {
                             e.state = "dead";
-                            game.score += e.type === "soldier" ? 50 : 25;
+                            game.score += e.type === "soldier" ? 60 : 30;
                         }
                         return;
                     }
 
-                    // Simple patrol logic
+                    // Patrol logic
                     if (e.state === "patrol") {
                         e.x += e.speed * e.dir;
                         if (Math.abs(e.x - e.startX) > e.range) {
@@ -188,27 +303,15 @@ const module1 = {
                             game.playerHurt();
                         }
 
-                        // Check family colls
+                        // Check family collisions
                         this.family.forEach(member => {
                             if (member.healthy && game.collides(member, e)) {
                                 member.healthy = false;
-                                game.score = Math.max(0, game.score - 50);
+                                game.score = Math.max(0, game.score - 40);
                                 window.gameAudio.playHurt();
-                                game.showNotification("¡Un familiar fue asustado! Pierdes puntos.");
+                                game.showNotification("¡Un miembro de la familia fue hostigado! Protege a los tuyos.");
                             }
                         });
-                    } else if (e.state === "scared") {
-                        // Burlones run away
-                        e.x += e.speed * 2 * e.dir;
-                    }
-                });
-
-                // Check coin collection
-                this.monedas.forEach(m => {
-                    if (!m.collected && game.collides(game.player, { x: m.x - 10, y: m.y - 10, width: 20, height: 20 })) {
-                        m.collected = true;
-                        game.score += 10;
-                        window.gameAudio.playCoin();
                     }
                 });
 
@@ -216,8 +319,8 @@ const module1 = {
                 if (game.player.x > 1650 && this.checkpoint.x < 1600 && game.player.grounded) {
                     this.checkpoint = { x: 1650, y: 400 };
                 }
-                if (game.player.x > 2950 && this.checkpoint.x < 2900 && game.player.grounded) {
-                    this.checkpoint = { x: 2950, y: 400 };
+                if (game.player.x > 2980 && this.checkpoint.x < 2900 && game.player.grounded) {
+                    this.checkpoint = { x: 2980, y: 400 };
                 }
 
                 // Pit/fall check
@@ -228,9 +331,9 @@ const module1 = {
                     game.player.velY = 0;
                     game.playerHurt();
 
-                    // Reset position history so family doesn't stretch or snap in weird ways
+                    // Reset position history for family
                     this.positionHistory = [];
-                    for(let i=0; i<300; i++) {
+                    for (let i = 0; i < 400; i++) {
                         this.positionHistory.push({ x: this.checkpoint.x, y: this.checkpoint.y, agachado: false, jumping: false });
                     }
                     this.family.forEach(member => {
@@ -239,349 +342,294 @@ const module1 = {
                     });
                 }
 
-                // Check level completion after reaching the tents and dialogue has finished
-                if (this.valleyDialogueTriggered && !game.dialogueActive && game.player.x > 3600 && !this.finishSpiritualTextShown) {
+                // Check level completion after Altar dedication and dialogue finishes
+                if (this.altar.completed && this.altarDialogueTriggered && !game.dialogueActive && !this.finishSpiritualTextShown) {
                     this.finishSpiritualTextShown = true;
-                    // Calculate safety bonus
                     let safeCount = this.family.filter(m => m.healthy).length;
-                    let bonus = safeCount * 100;
+                    let bonus = safeCount * 120 + 200; // Family safety + altar completion bonus
                     game.score += bonus;
-                    
-                    game.completeLevel("Fue obediente a la palabra del Señor y partió para el desierto.", "1 Nefi 2:2-3", bonus);
+
+                    // Completes level and triggers Quiz Screen (Reto de Fe)
+                    game.completeLevel(
+                        "Fue obediente a la palabra del Señor; erigió un altar de piedras y dio gracias al Señor nuestro Dios.",
+                        "1 Nefi 2:3, 7",
+                        bonus
+                    );
                 }
             },
 
             draw: function(ctx, game, gameFrame, camaraX) {
-                // Background sky Jerusalem night transitioning to desert night
+                // Dynamic Sky Background transitioning between the 3 biomes:
+                // 1) Jerusalem Deep Night (0 - 1500)
+                // 2) Red Sea Desert Dusk (1500 - 2800)
+                // 3) Valley of Lemuel Verdant Oasis (2800 - 4200)
                 let skyGrad = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-                skyGrad.addColorStop(0, "#060412");
-                skyGrad.addColorStop(0.5, "#120924");
-                skyGrad.addColorStop(1, "#2c1435");
+                if (camaraX < 1400) {
+                    skyGrad.addColorStop(0, "#05030f");
+                    skyGrad.addColorStop(0.5, "#100820");
+                    skyGrad.addColorStop(1, "#26102e");
+                } else if (camaraX < 2600) {
+                    skyGrad.addColorStop(0, "#090616");
+                    skyGrad.addColorStop(0.5, "#200e26");
+                    skyGrad.addColorStop(1, "#3c172a");
+                } else {
+                    skyGrad.addColorStop(0, "#08101a");
+                    skyGrad.addColorStop(0.5, "#18261e");
+                    skyGrad.addColorStop(1, "#243826");
+                }
                 ctx.fillStyle = skyGrad;
                 ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-                // Twinkling stars
-                ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-                for(let i=0; i<25; i++) {
-                    let starX = (i * 190 - camaraX * 0.1) % 1024;
+                // Twinkling Celestial Stars
+                ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+                for (let i = 0; i < 30; i++) {
+                    let starX = (i * 185 - camaraX * 0.08) % 1024;
                     if (starX < 0) starX += 1024;
-                    let starY = (i * 61) % 240;
-                    let size = 1.2 + Math.sin(gameFrame * 0.05 + i) * 0.8;
+                    let starY = (i * 59) % 240;
+                    let size = 1.2 + Math.sin(gameFrame * 0.05 + i) * 0.9;
                     ctx.fillRect(starX, starY, size, size);
                 }
 
-                // Glowing crescent moon in top left sky
-                ctx.save();
-                ctx.shadowColor = "#fffae0";
-                ctx.shadowBlur = 20;
-                ctx.fillStyle = "#fffae0";
-                ctx.beginPath();
-                ctx.arc(140, 80, 24, 0, Math.PI * 2);
-                ctx.fill();
-                // cut moon crescent shape
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = "#060412"; // matches sky top color
-                ctx.beginPath();
-                ctx.arc(150, 74, 23, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                // Parallax silhouettes of old Jerusalem buildings transitioning to sand dunes
-                // Far city silhouette
-                for (let i = 0; i < 8; i++) {
-                    let bX = i * 280 - camaraX * 0.2;
-                    let opacity = Math.max(0, Math.min(1, (1800 - bX) / 400));
-                    if (opacity > 0) {
-                        ctx.save();
-                        ctx.globalAlpha = opacity;
-                        ctx.fillStyle = "#0c0a1a";
-                        ctx.fillRect(bX, 240, 110, 260);
-                        ctx.beginPath();
-                        ctx.arc(bX + 55, 240, 50, 0, Math.PI, true);
-                        ctx.fill();
-                        ctx.restore();
-                    }
-                }
-                
-                // Near city silhouette
-                for (let i = 0; i < 11; i++) {
-                    let bX = i * 220 - camaraX * 0.35;
-                    let opacity = Math.max(0, Math.min(1, (1900 - bX) / 400));
-                    if (opacity > 0) {
-                        ctx.save();
-                        ctx.globalAlpha = opacity;
-                        ctx.fillStyle = "#120f26";
-                        ctx.fillRect(bX, 280, 140, 220);
-                        
-                        // Draw battlements
-                        for (let batt = 0; batt < 140; batt += 35) {
-                            ctx.fillRect(bX + batt, 268, 20, 12);
-                        }
-                        
-                        // Glowing warm windows
-                        ctx.fillStyle = "rgba(255, 215, 0, 0.4)";
-                        ctx.fillRect(bX + 30, 310, 16, 25);
-                        ctx.fillRect(bX + 90, 310, 16, 25);
-                        ctx.restore();
-                    }
-                }
-
-                // Parallax Sand Dunes in the desert region
-                // Far dunes
-                for (let i = 0; i < 12; i++) {
-                    let dX = 1200 + i * 260 - camaraX * 0.3;
-                    let opacity = Math.max(0, Math.min(1, (dX - 900) / 400));
-                    if (opacity > 0) {
-                        ctx.save();
-                        ctx.globalAlpha = opacity;
-                        ctx.fillStyle = "#201128";
-                        ctx.beginPath();
-                        ctx.moveTo(dX - 180, 500);
-                        ctx.quadraticCurveTo(dX + 50, 370, dX + 280, 500);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.restore();
-                    }
-                }
-                
-                // Near dunes
-                for (let i = 0; i < 12; i++) {
-                    let dX = 1350 + i * 260 - camaraX * 0.45;
-                    let opacity = Math.max(0, Math.min(1, (dX - 900) / 400));
-                    if (opacity > 0) {
-                        ctx.save();
-                        ctx.globalAlpha = opacity;
-                        ctx.fillStyle = "#2c152a";
-                        ctx.beginPath();
-                        ctx.moveTo(dX - 220, 500);
-                        ctx.quadraticCurveTo(dX + 80, 410, dX + 320, 500);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.restore();
-                    }
-                }
-
-                // Palm trees in background
-                for (let i = 0; i < 6; i++) {
-                    let pX = 1800 + i * 360 - camaraX * 0.45;
-                    let opacity = Math.max(0, Math.min(1, (pX - 1200) / 400));
-                    if (opacity > 0 && pX > -100 && pX < 1124) {
-                        ctx.save();
-                        ctx.globalAlpha = opacity;
-                        ctx.fillStyle = "#16071f";
-                        // Trunk
-                        ctx.beginPath();
-                        ctx.moveTo(pX, 500);
-                        ctx.quadraticCurveTo(pX + 10, 430, pX + 5, 360);
-                        ctx.lineTo(pX - 5, 360);
-                        ctx.quadraticCurveTo(pX, 430, pX - 5, 500);
-                        ctx.closePath();
-                        ctx.fill();
-                        // Leaves (fronds)
-                        ctx.translate(pX, 360);
-                        for (let f = 0; f < 5; f++) {
-                            ctx.rotate((Math.PI * 2) / 5);
-                            ctx.beginPath();
-                            ctx.ellipse(0, -18, 7, 24, 0.1, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        ctx.restore();
-                    }
-                }
-
-                // Draw decorations (houses, gates, tents)
-                this.decorations.forEach(dec => {
+                // Ethereal Crescent Moon in Jerusalem Sky
+                if (camaraX < 1800) {
                     ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    if (dec.label.includes("Casa")) {
-                        ctx.fillStyle = "#261b15";
-                        ctx.fillRect(dec.x, dec.y, dec.w, dec.h);
-                        // Stone block borders
-                        ctx.strokeStyle = "#4d382d";
-                        ctx.lineWidth = 3;
-                        ctx.strokeRect(dec.x, dec.y, dec.w, dec.h);
-                        // Glowing windows
-                        ctx.fillStyle = "#ffb300";
-                        ctx.fillRect(dec.x + 30, dec.y + 40, 30, 40);
-                        ctx.fillRect(dec.x + 140, dec.y + 40, 30, 40);
-                        ctx.fillStyle = "rgba(0,0,0,0.3)";
-                        ctx.fillRect(dec.x + 30, dec.y + 40, 15, 40);
-                        ctx.fillRect(dec.x + 140, dec.y + 40, 15, 40);
-                        
-                        ctx.fillStyle = "#cca87a";
-                        ctx.font = "bold 12px Outfit";
-                        ctx.fillText("Casa de Lehí", dec.x + 60, dec.y - 10);
-                    } else if (dec.label.includes("Puerta")) {
-                        // Grand stone Arch of Jerusalem in the background (Visual gateway)
-                        ctx.fillStyle = "#1a130f";
-                        // Left column
-                        ctx.fillRect(dec.x, dec.y, 22, dec.h);
-                        // Right column
-                        ctx.fillRect(dec.x + dec.w - 22, dec.y, 22, dec.h);
-                        // Arched vault header
-                        ctx.beginPath();
-                        ctx.arc(dec.x + dec.w/2, dec.y + 22, dec.w/2, Math.PI, 0, false);
-                        ctx.lineTo(dec.x + dec.w - 22, dec.y + 22);
-                        ctx.arc(dec.x + dec.w/2, dec.y + 22, dec.w/2 - 22, 0, Math.PI, true);
-                        ctx.lineTo(dec.x, dec.y + 22);
-                        ctx.closePath();
-                        ctx.fill();
-                        
-                        // Stone keystone
-                        ctx.fillStyle = "#8c6e5c";
-                        ctx.fillRect(dec.x + dec.w/2 - 12, dec.y - 8, 24, 18);
-                        
-                        // Pillar lines
-                        ctx.strokeStyle = "rgba(255,255,255,0.06)";
-                        ctx.lineWidth = 1;
-                        for(let py = dec.y + 22; py < dec.y + dec.h; py += 25) {
-                            ctx.beginPath();
-                            ctx.moveTo(dec.x, py); ctx.lineTo(dec.x + 22, py);
-                            ctx.moveTo(dec.x + dec.w - 22, py); ctx.lineTo(dec.x + dec.w, py);
-                            ctx.stroke();
-                        }
-                    } else if (dec.label.includes("Tiendas")) {
-                        // Tents (Desert Wilderness Campsite)
-                        ctx.fillStyle = "#b88e6e";
-                        ctx.beginPath();
-                        ctx.moveTo(dec.x, dec.y + dec.h);
-                        ctx.lineTo(dec.x + dec.w/2, dec.y);
-                        ctx.lineTo(dec.x + dec.w, dec.y + dec.h);
-                        ctx.closePath();
-                        ctx.fill();
-                        
-                        // Inner door shade
-                        ctx.fillStyle = "#5d4037";
-                        ctx.beginPath();
-                        ctx.moveTo(dec.x + dec.w/2 - 24, dec.y + dec.h);
-                        ctx.lineTo(dec.x + dec.w/2, dec.y + 55);
-                        ctx.lineTo(dec.x + dec.w/2 + 24, dec.y + dec.h);
-                        ctx.closePath();
-                        ctx.fill();
+                    ctx.shadowColor = "#fffae0";
+                    ctx.shadowBlur = 18;
+                    ctx.fillStyle = "#fffae0";
+                    ctx.beginPath();
+                    ctx.arc(140 - camaraX * 0.04, 75, 22, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = "#05030f";
+                    ctx.beginPath();
+                    ctx.arc(150 - camaraX * 0.04, 70, 21, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Red Sea Water Horizon & Shimmer (Desert section x: 1400 to 2800)
+                let seaStartX = 1400 - camaraX * 0.2;
+                if (seaStartX < 1024 && seaStartX > -1200) {
+                    ctx.save();
+                    let seaGrad = ctx.createLinearGradient(0, 310, 0, 370);
+                    seaGrad.addColorStop(0, "rgba(10, 25, 45, 0.85)");
+                    seaGrad.addColorStop(1, "rgba(22, 55, 80, 0.4)");
+                    ctx.fillStyle = seaGrad;
+                    ctx.fillRect(0, 310, 1024, 60);
+
+                    // Moonlight reflections on the Red Sea waters
+                    ctx.fillStyle = "rgba(255, 240, 180, 0.25)";
+                    for (let s = 0; s < 12; s++) {
+                        let rx = (s * 85 + gameFrame * 0.4) % 1024;
+                        let ry = 320 + (s * 7) % 40;
+                        let rw = 25 + Math.sin(gameFrame * 0.1 + s) * 15;
+                        ctx.fillRect(rx, ry, rw, 1.5);
                     }
                     ctx.restore();
-                });
+                }
 
-                // Platforms with ancient textured styling
+                // Parallax Mountain Ridges & Desert Dunes
+                for (let i = 0; i < 10; i++) {
+                    let dX = 1300 + i * 280 - camaraX * 0.3;
+                    if (dX > -300 && dX < 1324) {
+                        ctx.save();
+                        ctx.fillStyle = "#1e1022";
+                        ctx.beginPath();
+                        ctx.moveTo(dX - 160, 500);
+                        ctx.quadraticCurveTo(dX + 60, 360, dX + 280, 500);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                // Parallax Canyon Cliffs of the Valley of Lemuel (x > 2700)
+                for (let i = 0; i < 8; i++) {
+                    let cliffX = 2800 + i * 240 - camaraX * 0.35;
+                    if (cliffX > -250 && cliffX < 1274) {
+                        ctx.save();
+                        ctx.fillStyle = "#162218";
+                        ctx.beginPath();
+                        ctx.moveTo(cliffX, 500);
+                        ctx.lineTo(cliffX + 30, 220);
+                        ctx.lineTo(cliffX + 110, 200);
+                        ctx.lineTo(cliffX + 180, 240);
+                        ctx.lineTo(cliffX + 210, 500);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                // River Lamán (Water Body flowing to the Red Sea, x: 3300 to 4200)
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                if (camaraX > 2400) {
+                    let riverGrad = ctx.createLinearGradient(3300, 485, 3300, 576);
+                    riverGrad.addColorStop(0, "#00bcd4");
+                    riverGrad.addColorStop(0.3, "#00838f");
+                    riverGrad.addColorStop(1, "#004d40");
+                    ctx.fillStyle = riverGrad;
+
+                    // Animated undulating water stream
+                    ctx.beginPath();
+                    ctx.moveTo(3300, 500);
+                    for (let wx = 3300; wx <= 4200; wx += 25) {
+                        let wy = 492 + Math.sin(gameFrame * 0.08 + wx * 0.04) * 4;
+                        ctx.lineTo(wx, wy);
+                    }
+                    ctx.lineTo(4200, 576);
+                    ctx.lineTo(3300, 576);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Flowing Foam Crests
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let wx = 3310; wx <= 4190; wx += 30) {
+                        let wy = 494 + Math.sin(gameFrame * 0.08 + wx * 0.04) * 4;
+                        ctx.moveTo(wx, wy);
+                        ctx.lineTo(wx + 15, wy);
+                    }
+                    ctx.stroke();
+
+                    // Signpost: Río Lamán
+                    ctx.fillStyle = "#5d4037";
+                    ctx.fillRect(3360, 430, 6, 50);
+                    ctx.fillStyle = "#8d6e63";
+                    ctx.fillRect(3320, 400, 85, 30);
+                    ctx.strokeStyle = "#3e2723";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(3320, 400, 85, 30);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 10px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("RÍO LAMÁN", 3362, 415);
+                    ctx.font = "8px Outfit";
+                    ctx.fillStyle = "#ffe082";
+                    ctx.fillText("(1 Nefi 2:8)", 3362, 425);
+                }
+                ctx.restore();
+
+                // Draw Platforms
                 ctx.save();
                 ctx.translate(-camaraX, 0);
                 this.platforms.forEach(plat => {
-                    let isCity = plat.x < 1800;
                     ctx.save();
-                    
-                    if (isCity) {
-                        // Limestone blocks
-                        ctx.fillStyle = "#3d2f25"; // Stone base shadow
+                    if (plat.x < 1500) {
+                        // Jerusalem Ashlar Stone
+                        let stoneGrad = ctx.createLinearGradient(plat.x, plat.y, plat.x, plat.y + plat.height);
+                        stoneGrad.addColorStop(0, "#a48866");
+                        stoneGrad.addColorStop(1, "#54402d");
+                        ctx.fillStyle = stoneGrad;
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-                        
-                        // Render stone brick texture
-                        ctx.strokeStyle = "rgba(255, 235, 200, 0.07)";
+                        ctx.strokeStyle = "#3d2c1c";
                         ctx.lineWidth = 1.5;
-                        let stepX = 40;
-                        let stepY = 20;
-                        for (let yOffset = 0; yOffset < plat.height; yOffset += stepY) {
-                            ctx.beginPath();
-                            ctx.moveTo(plat.x, plat.y + yOffset);
-                            ctx.lineTo(plat.x + plat.width, plat.y + yOffset);
-                            ctx.stroke();
-                            
-                            let startShift = (yOffset / stepY) % 2 === 0 ? 0 : stepX / 2;
-                            for (let xOffset = startShift; xOffset < plat.width; xOffset += stepX) {
-                                ctx.beginPath();
-                                ctx.moveTo(plat.x + xOffset, plat.y + yOffset);
-                                ctx.lineTo(plat.x + xOffset, Math.min(plat.y + plat.height, plat.y + yOffset + stepY));
-                                ctx.stroke();
-                            }
-                        }
-                        
-                        // Top limestone cap
-                        ctx.fillStyle = "#c2a67e";
-                        ctx.fillRect(plat.x, plat.y, plat.width, 6);
-                        
-                        // Edge bevel highlights
-                        ctx.fillStyle = "#edd2ad";
-                        ctx.fillRect(plat.x, plat.y, plat.width, 2);
-                    } else if (plat.x >= 2900) {
-                        // Tents platform: Golden desert sand dunes
-                        ctx.fillStyle = "#5c3c21"; // Warm sand base
+                        ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
+                        // Limestone cap
+                        ctx.fillStyle = "#dfcbb5";
+                        ctx.fillRect(plat.x, plat.y, plat.width, 5);
+                    } else if (plat.x < 2800) {
+                        // Desert Dunes (Warm Ochre Sand)
+                        let sandGrad = ctx.createLinearGradient(plat.x, plat.y, plat.x, plat.y + plat.height);
+                        sandGrad.addColorStop(0, "#c29153");
+                        sandGrad.addColorStop(0.5, "#8d5d2a");
+                        sandGrad.addColorStop(1, "#4e2c0e");
+                        ctx.fillStyle = sandGrad;
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-
-                        // Organic wavy sand dunes on top of the platform
-                        ctx.fillStyle = "#d49f63"; // Warm sand top
-                        ctx.beginPath();
-                        ctx.moveTo(plat.x, plat.y + 10);
-                        for (let dx = 0; dx <= plat.width; dx += 20) {
-                            let dy = Math.sin((plat.x + dx) * 0.05) * 6;
-                            ctx.lineTo(plat.x + dx, plat.y + dy);
-                        }
-                        ctx.lineTo(plat.x + plat.width, plat.y + plat.height);
-                        ctx.lineTo(plat.x, plat.y + plat.height);
-                        ctx.closePath();
-                        ctx.fill();
-
-                        // Top golden highlight cap
-                        ctx.fillStyle = "#ffd700";
-                        ctx.beginPath();
-                        ctx.moveTo(plat.x, plat.y);
-                        for (let dx = 0; dx <= plat.width; dx += 20) {
-                            let dy = Math.sin((plat.x + dx) * 0.05) * 6;
-                            ctx.lineTo(plat.x + dx, plat.y + dy);
-                        }
-                        for (let dx = plat.width; dx >= 0; dx -= 20) {
-                            let dy = Math.sin((plat.x + dx) * 0.05) * 6 + 3;
-                            ctx.lineTo(plat.x + dx, plat.y + dy);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
+                        // Gold edge highlight
+                        ctx.fillStyle = "#ffd599";
+                        ctx.fillRect(plat.x, plat.y, plat.width, 4);
                     } else {
-                        // Desert earth/sand blocks
-                        ctx.fillStyle = "#291810"; // Dark sandy ground base
+                        // Fertile Valley Ground (Lush turf and green grass)
+                        let valleyGrad = ctx.createLinearGradient(plat.x, plat.y, plat.x, plat.y + plat.height);
+                        valleyGrad.addColorStop(0, "#3e5b32");
+                        valleyGrad.addColorStop(0.3, "#2d3e24");
+                        valleyGrad.addColorStop(1, "#1b2816");
+                        ctx.fillStyle = valleyGrad;
                         ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-                        
-                        // Draw organic sand ripples/layers
-                        ctx.strokeStyle = "rgba(230, 160, 100, 0.12)";
-                        ctx.lineWidth = 3;
-                        for (let yOffset = 15; yOffset < plat.height; yOffset += 20) {
+                        // Emerald grass cap
+                        ctx.fillStyle = "#66bb6a";
+                        ctx.fillRect(plat.x, plat.y, plat.width, 6);
+
+                        // Grass blades
+                        ctx.fillStyle = "#81c784";
+                        for (let gx = 15; gx < plat.width - 15; gx += 35) {
                             ctx.beginPath();
-                            ctx.moveTo(plat.x, plat.y + yOffset);
-                            ctx.bezierCurveTo(plat.x + plat.width * 0.35, plat.y + yOffset - 5, plat.x + plat.width * 0.65, plat.y + yOffset + 5, plat.x + plat.width, plat.y + yOffset);
-                            ctx.stroke();
+                            ctx.moveTo(plat.x + gx, plat.y);
+                            ctx.lineTo(plat.x + gx - 3, plat.y - 8);
+                            ctx.lineTo(plat.x + gx + 1, plat.y);
+                            ctx.fill();
                         }
-                        
-                        // Top sand cap
-                        ctx.fillStyle = "#a67c52"; // Golden desert sand
-                        ctx.fillRect(plat.x, plat.y, plat.width, 8);
-                        
-                        // Highlight top cap
-                        ctx.fillStyle = "#d49f63";
-                        ctx.fillRect(plat.x, plat.y, plat.width, 3);
                     }
                     ctx.restore();
                 });
                 ctx.restore();
 
-                // Draw Torches with rising fire particles
+                // Draw Abandoned Wealth of Lehi (1 Nefi 2:4) in Jerusalem
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                if (camaraX < 1000) {
+                    let chestX = 250;
+                    let chestY = 460;
+                    // Treasure Chest 1 (Gold)
+                    ctx.fillStyle = "#5d4037"; // Wood body
+                    ctx.fillRect(chestX, chestY, 44, 28);
+                    ctx.strokeStyle = "#ffd700"; // Golden bands
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(chestX, chestY, 44, 28);
+                    ctx.strokeRect(chestX + 12, chestY, 20, 28);
+
+                    // Open chest lid
+                    ctx.fillStyle = "#3e2723";
+                    ctx.beginPath();
+                    ctx.moveTo(chestX - 4, chestY);
+                    ctx.lineTo(chestX + 22, chestY - 14);
+                    ctx.lineTo(chestX + 48, chestY);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Sparkling gold and jewels overflowing
+                    ctx.fillStyle = "#ffd700";
+                    ctx.beginPath();
+                    ctx.arc(chestX + 16, chestY + 2, 7, 0, Math.PI * 2);
+                    ctx.arc(chestX + 28, chestY, 8, 0, Math.PI * 2);
+                    ctx.arc(chestX + 36, chestY + 4, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Sparkle stars
+                    ctx.fillStyle = "#ffffff";
+                    let spk = Math.sin(gameFrame * 0.2) * 2;
+                    ctx.fillRect(chestX + 22, chestY - 6 + spk, 3, 3);
+                    ctx.fillRect(chestX + 32, chestY - 2 - spk, 2, 2);
+
+                    // Doctrinal Badge on the ground
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                    ctx.fillRect(chestX - 25, chestY + 32, 120, 18);
+                    ctx.fillStyle = "#ffd700";
+                    ctx.font = "bold 9px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Oro y Plata abandonados", chestX + 35, chestY + 44);
+                }
+                ctx.restore();
+
+                // Draw Torches with rising fire embers
                 ctx.save();
                 ctx.translate(-camaraX, 0);
                 this.torches.forEach(t => {
-                    // Torch stick
                     ctx.fillStyle = "#5d4037";
                     ctx.fillRect(t.x, t.y, 4, 20);
-                    // Iron base
                     ctx.fillStyle = "#37474f";
-                    ctx.fillRect(t.x - 2, t.y, 8, 4);
+                    ctx.fillRect(t.x - 2, t.y + 8, 8, 4);
 
-                    // Dynamic flame particles
-                    for (let p = 0; p < 6; p++) {
+                    for (let p = 0; p < 5; p++) {
                         let offsetSeed = p * 12 + gameFrame;
-                        let pX = t.x + 2 + Math.sin(offsetSeed * 0.15) * 6;
-                        let pY = t.y - 4 - (offsetSeed % 18);
-                        let pSize = 3 + (offsetSeed % 5);
-                        
+                        let pX = t.x + 2 + Math.sin(offsetSeed * 0.15) * 5;
+                        let pY = t.y - 3 - (offsetSeed % 16);
+                        let pSize = 3 + (offsetSeed % 4);
                         let colors = ["#ff3d00", "#ff9100", "#ffea00", "#ff6d00"];
                         ctx.fillStyle = colors[p % colors.length];
-                        ctx.shadowColor = "#ff3d00";
-                        ctx.shadowBlur = 10;
                         ctx.beginPath();
                         ctx.arc(pX, pY, pSize, 0, Math.PI * 2);
                         ctx.fill();
@@ -589,25 +637,187 @@ const module1 = {
                 });
                 ctx.restore();
 
-                // Coins
+                // Draw Supplies (Provisiones: Odres de Agua, Sacos de Grano, Lienzos de Tienda)
                 ctx.save();
                 ctx.translate(-camaraX, 0);
-                this.monedas.forEach(m => {
-                    if (!m.collected) {
-                        ctx.fillStyle = "#ffd700";
+                this.provisiones.forEach(p => {
+                    if (p.collected) return;
+                    let bobbing = Math.sin(gameFrame * 0.15 + p.x) * 4;
+
+                    if (p.tipo === "agua") {
+                        // Odre de agua de cuero (Leather Waterskin)
+                        ctx.save();
+                        ctx.translate(p.x, p.y + bobbing);
+                        ctx.fillStyle = "#6d4c41"; // Dark leather
                         ctx.beginPath();
-                        ctx.arc(m.x, m.y + Math.sin(gameFrame * 0.15) * 3.5, 7, 0, Math.PI*2);
+                        ctx.ellipse(0, 4, 9, 13, 0.2, 0, Math.PI * 2);
                         ctx.fill();
-                        ctx.strokeStyle = "#e65100";
+                        ctx.strokeStyle = "#3e2723";
                         ctx.lineWidth = 1.5;
                         ctx.stroke();
-                        // Inner star reflection
-                        ctx.fillStyle = "#fff799";
+                        // Wooden stopper
+                        ctx.fillStyle = "#d7ccc8";
+                        ctx.fillRect(-2, -12, 4, 5);
+                        // Strap
+                        ctx.strokeStyle = "#271c19";
                         ctx.beginPath();
-                        ctx.arc(m.x - 1, m.y + Math.sin(gameFrame * 0.15) * 3.5 - 1, 2, 0, Math.PI*2);
+                        ctx.arc(0, 4, 11, Math.PI * 0.8, Math.PI * 1.8);
+                        ctx.stroke();
+                        // Water drop blue sheen
+                        ctx.fillStyle = "#29b6f6";
+                        ctx.beginPath();
+                        ctx.arc(3, 4, 3, 0, Math.PI * 2);
                         ctx.fill();
+                        ctx.restore();
+                    } else if (p.tipo === "grano") {
+                        // Saco de provisiones (Burlap grain sack)
+                        ctx.save();
+                        ctx.translate(p.x, p.y + bobbing);
+                        ctx.fillStyle = "#c7a76c"; // Tan burlap
+                        ctx.beginPath();
+                        ctx.ellipse(0, 4, 11, 12, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = "#8d6e3f";
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        // Tied neck
+                        ctx.fillStyle = "#5d4037";
+                        ctx.fillRect(-4, -8, 8, 4);
+                        ctx.fillStyle = "#d7ccc8";
+                        ctx.beginPath();
+                        ctx.ellipse(0, -10, 6, 3, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        // Wheat icon
+                        ctx.strokeStyle = "#5d4037";
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, 9);
+                        ctx.stroke();
+                        ctx.restore();
+                    } else {
+                        // Lienzo de tienda (Rolled tent fabric bundle)
+                        ctx.save();
+                        ctx.translate(p.x, p.y + bobbing);
+                        ctx.fillStyle = "#e0e0e0"; // Heavy canvas
+                        ctx.fillRect(-12, -6, 24, 12);
+                        ctx.strokeStyle = "#616161";
+                        ctx.lineWidth = 1.5;
+                        ctx.strokeRect(-12, -6, 24, 12);
+                        // Leather tying cords
+                        ctx.strokeStyle = "#5d4037";
+                        ctx.beginPath();
+                        ctx.moveTo(-5, -6);
+                        ctx.lineTo(-5, 6);
+                        ctx.moveTo(5, -6);
+                        ctx.lineTo(5, 6);
+                        ctx.stroke();
+                        ctx.restore();
                     }
                 });
+                ctx.restore();
+
+                // Draw Loose Altar Stones
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                this.altarStones.forEach(s => {
+                    if (s.collected) return;
+                    let bob = Math.sin(gameFrame * 0.12 + s.x) * 3;
+                    ctx.save();
+                    ctx.translate(s.x, s.y + bob);
+                    // Holy glow aura
+                    ctx.fillStyle = "rgba(255, 215, 0, 0.35)";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Uncut river stone
+                    ctx.fillStyle = "#b0bec5";
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 10, 7, 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = "#546e7a";
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // Mini label
+                    ctx.fillStyle = "#ffd700";
+                    ctx.font = "bold 8px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Piedra 🪨", 0, -10);
+                    ctx.restore();
+                });
+                ctx.restore();
+
+                // Draw Altar of Stones (1 Nefi 2:7)
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                let ax = this.altar.x;
+                let ay = this.altar.y;
+
+                // Base platform foundation
+                ctx.fillStyle = "#455a64";
+                ctx.fillRect(ax - 20, ay + 20, 70, 15);
+                ctx.strokeStyle = "#263238";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(ax - 20, ay + 20, 70, 15);
+
+                if (this.altar.stonesPlaced >= 1) {
+                    // First Tier Stone
+                    ctx.fillStyle = "#78909c";
+                    ctx.fillRect(ax - 15, ay + 6, 60, 14);
+                    ctx.strokeRect(ax - 15, ay + 6, 60, 14);
+                }
+                if (this.altar.stonesPlaced >= 2) {
+                    // Second Tier Stone
+                    ctx.fillStyle = "#90a4ae";
+                    ctx.fillRect(ax - 8, ay - 6, 46, 12);
+                    ctx.strokeRect(ax - 8, ay - 6, 46, 12);
+                }
+                if (this.altar.stonesPlaced >= 3) {
+                    // Top Altar Stone Slab
+                    ctx.fillStyle = "#cfd8dc";
+                    ctx.fillRect(ax - 12, ay - 14, 54, 8);
+                    ctx.strokeRect(ax - 12, ay - 14, 54, 8);
+
+                    // Roaring Sacred Altar Fire
+                    for (let f = 0; f < 8; f++) {
+                        let fOffset = f * 9 + gameFrame;
+                        let fx = ax + 15 + Math.sin(fOffset * 0.2) * 12;
+                        let fy = ay - 16 - (fOffset % 26);
+                        let fSize = 5 + (fOffset % 6);
+                        let fColors = ["#ffffff", "#ffea00", "#ff9800", "#ff3d00"];
+                        ctx.fillStyle = fColors[f % fColors.length];
+                        ctx.beginPath();
+                        ctx.arc(fx, fy, fSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Sacred Smoke rising to heaven
+                    ctx.fillStyle = "rgba(238, 238, 238, 0.2)";
+                    for (let sm = 0; sm < 4; sm++) {
+                        let smOffset = sm * 25 + gameFrame * 0.7;
+                        let smX = ax + 15 + Math.sin(smOffset * 0.08) * 18;
+                        let smY = ay - 35 - (smOffset % 80);
+                        ctx.beginPath();
+                        ctx.arc(smX, smY, 12 + sm * 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Golden halo of thanksgiving
+                    ctx.fillStyle = "rgba(255, 215, 0, 0.15)";
+                    ctx.beginPath();
+                    ctx.arc(ax + 15, ay - 10, 45, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Altar Name Plaque
+                ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+                ctx.fillRect(ax - 30, ay + 38, 90, 18);
+                ctx.fillStyle = "#ffd700";
+                ctx.font = "bold 9px Outfit";
+                ctx.textAlign = "center";
+                ctx.fillText("Altar de Piedras", ax + 15, ay + 50);
+
                 ctx.restore();
 
                 // Draw Family Queue with detailed visual designs
@@ -617,61 +827,73 @@ const module1 = {
                     ctx.save();
                     let fH = member.agachado ? member.height * 0.55 : member.height;
                     let fY = member.y;
-                    
+
                     // Shadow under feet
                     ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
                     ctx.beginPath();
-                    ctx.ellipse(member.x + 20, fY + fH - 2, 12, 4, 0, 0, Math.PI*2);
+                    ctx.ellipse(member.x + 20, fY + fH - 2, 12, 4, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Body robe with highlights & shading (leaves 8px at the bottom for legs)
-                    ctx.fillStyle = member.healthy ? member.color : "#d32f2f"; // Red if hit
+                    // Body robe
+                    ctx.fillStyle = member.healthy ? member.color : "#d32f2f";
                     ctx.fillRect(member.x + 10, fY + 20, 20, fH - 28);
-                    
-                    // Render details depending on who they are
+
+                    // Specific character touches
                     if (member.name === "Saríah") {
-                        // Cream veil draped over the head & shoulders
+                        // Veiled matriarch
                         ctx.fillStyle = "#fcf8f2";
                         ctx.fillRect(member.x + 7, fY + 6, 26, 18);
                         ctx.beginPath();
                         ctx.ellipse(member.x + 20, fY + 6, 13, 7, 0, Math.PI, 0, false);
                         ctx.fill();
-                        
-                        // Teal details/sash
                         ctx.fillStyle = "#008080";
                         ctx.fillRect(member.x + 10, fY + fH - 12, 20, 3);
                     } else if (member.name === "Nefi") {
-                        // Blue robe with a golden sash
+                        // Blue robe with golden sash
                         ctx.fillStyle = "#ffd700";
-                        ctx.fillRect(member.x + 8, fY + 24, 24, 4); // sash
+                        ctx.fillRect(member.x + 8, fY + 24, 24, 4);
+
+                        // If praying at the end of level, draw divine light column above Nephi
+                        if (member.praying) {
+                            ctx.fillStyle = "rgba(255, 235, 59, 0.25)";
+                            ctx.fillRect(member.x + 5, fY - 140, 30, 160);
+                            ctx.fillStyle = "#ffd700";
+                            ctx.font = "bold 8px Outfit";
+                            ctx.textAlign = "center";
+                            ctx.fillText("Oración de Fe ✨", member.x + 20, fY - 10);
+                        }
                     } else if (member.name === "Sam") {
-                        // Brown sash
                         ctx.fillStyle = "#5d4037";
                         ctx.fillRect(member.x + 8, fY + 24, 24, 4);
                     } else {
-                        // Dark/grey belts for Laman/Lemuel
+                        // Laman & Lemuel
                         ctx.fillStyle = "#1e1e1e";
                         ctx.fillRect(member.x + 8, fY + 24, 24, 4);
+                        if (member.murmuring) {
+                            ctx.fillStyle = "#ff5252";
+                            ctx.font = "bold 8px Outfit";
+                            ctx.textAlign = "center";
+                            ctx.fillText("Murmurando 💢", member.x + 20, fY - 12);
+                        }
                     }
 
                     // Skin Head
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
-                    ctx.arc(member.x + 20, fY + 12, 9, 0, Math.PI*2);
+                    ctx.arc(member.x + 20, fY + 12, 9, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Hair/beard for brothers in Level 1
+                    // Hair/beard
                     if (member.name !== "Saríah") {
-                        ctx.fillStyle = member.name === "Sam" ? "#5d4037" : "#1a0d00"; // Sam brown, others black
+                        ctx.fillStyle = member.name === "Sam" ? "#5d4037" : "#1a0d00";
                         ctx.fillRect(member.x + 11, fY + 3, 18, 3);
-                        // beard for brothers
                         ctx.beginPath();
                         ctx.moveTo(member.x + 12, fY + 14);
                         ctx.quadraticCurveTo(member.x + 20, fY + 22, member.x + 28, fY + 14);
                         ctx.fill();
                     }
-                    
-                    // Polished Eyes (White outer, black pupil)
+
+                    // Eyes
                     ctx.fillStyle = "#ffffff";
                     ctx.fillRect(member.x + 15, fY + 8, 4, 3);
                     ctx.fillRect(member.x + 21, fY + 8, 4, 3);
@@ -700,48 +922,43 @@ const module1 = {
                         ctx.moveTo(member.x + 26, fY + fH - 8);
                         ctx.lineTo(member.x + 26 - walkStep, fY + fH);
                         ctx.stroke();
-                        
-                        // sandals
                         ctx.fillStyle = "#3e2723";
                         ctx.fillRect(member.x + 11 + walkStep, fY + fH - 2, 6, 3);
                         ctx.fillRect(member.x + 23 - walkStep, fY + fH - 2, 6, 3);
                     }
 
-                    // Name Tag (Premium styling)
+                    // Name Tag
                     ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
                     ctx.font = "bold 9px Outfit";
                     ctx.textAlign = "center";
                     ctx.shadowColor = "#000000";
                     ctx.shadowBlur = 4;
-                    ctx.fillText(member.name, member.x + 20, fY - 6);
+                    ctx.fillText(member.name, member.x + 20, fY - 5);
 
                     ctx.restore();
                 });
                 ctx.restore();
 
-                // Enemies (Guards: Soldiers & Mockers)
+                // Draw Enemies (Soldiers & Mockers)
                 ctx.save();
                 ctx.translate(-camaraX, 0);
                 this.enemies.forEach(e => {
                     if (e.state === "dead") return;
-
                     ctx.save();
-                    
+
                     if (e.type === "soldier") {
-                        // determined warrior face
-                        ctx.fillStyle = "#ffdbac"; // Skin
-                        ctx.fillRect(e.x + e.width/2 - 10, e.y + 4, 20, 16);
-                        
-                        // soldier beard/eyes
+                        // Soldier face
+                        ctx.fillStyle = "#ffdbac";
+                        ctx.fillRect(e.x + e.width / 2 - 10, e.y + 4, 20, 16);
                         ctx.fillStyle = "#1a0d00";
-                        ctx.fillRect(e.x + e.width/2 - 10, e.y + 12, 20, 8); // Beard
+                        ctx.fillRect(e.x + e.width / 2 - 10, e.y + 12, 20, 8);
                         ctx.fillStyle = "#ffffff";
                         let eyeDirX = e.dir > 0 ? 3 : -7;
-                        ctx.fillRect(e.x + e.width/2 + eyeDirX, e.y + 6, 4, 3);
+                        ctx.fillRect(e.x + e.width / 2 + eyeDirX, e.y + 6, 4, 3);
                         ctx.fillStyle = "#000000";
-                        ctx.fillRect(e.x + e.width/2 + eyeDirX + (e.dir > 0 ? 2 : 0), e.y + 7, 2, 2);
+                        ctx.fillRect(e.x + e.width / 2 + eyeDirX + (e.dir > 0 ? 2 : 0), e.y + 7, 2, 2);
 
-                        // Flowing Crimson Cape (drawn behind body)
+                        // Crimson Cape
                         ctx.fillStyle = "#b71c1c";
                         ctx.beginPath();
                         let capeBackX = e.dir > 0 ? e.x : e.x + e.width;
@@ -749,65 +966,33 @@ const module1 = {
                         ctx.moveTo(capeBackX, e.y + 20);
                         ctx.lineTo(capeBackX - (25 * e.dir) + capeWave, e.y + e.height - 10);
                         ctx.lineTo(capeBackX - (5 * e.dir), e.y + e.height);
-                        ctx.lineTo(e.x + e.width/2, e.y + 20);
+                        ctx.lineTo(e.x + e.width / 2, e.y + 20);
                         ctx.closePath();
                         ctx.fill();
 
-                        // Bronze Cuirass (Breastplate Body)
-                        ctx.fillStyle = "#cd7f32"; // Bronze base
+                        // Bronze Cuirass
+                        ctx.fillStyle = "#cd7f32";
                         ctx.fillRect(e.x + 8, e.y + 20, e.width - 16, e.height - 38);
-                        // Chest armor metallic shine highlights
                         ctx.fillStyle = "#ffd700";
                         ctx.fillRect(e.x + 10, e.y + 20, (e.width - 20) * 0.3, e.height - 38);
-                        
-                        // Iron Tunic/Skirt strips below breastplate
-                        ctx.fillStyle = "#eceff1";
-                        ctx.fillRect(e.x + 8, e.y + e.height - 18, e.width - 16, 5);
-                        ctx.fillStyle = "#455a64";
-                        ctx.fillRect(e.x + 10, e.y + e.height - 13, 6, 5);
-                        ctx.fillRect(e.x + 18, e.y + e.height - 13, 6, 5);
-                        ctx.fillRect(e.x + 26, e.y + e.height - 13, 6, 5);
-                        
-                        // Helmet with red crest
-                        ctx.fillStyle = "#78909c"; // Silver-grey steel helm
+
+                        // Helmet
+                        ctx.fillStyle = "#78909c";
                         ctx.beginPath();
-                        ctx.arc(e.x + e.width/2, e.y + 6, 12, Math.PI, 0, false);
-                        ctx.lineTo(e.x + e.width/2 + 10, e.y + 8);
-                        ctx.lineTo(e.x + e.width/2 - 10, e.y + 8);
+                        ctx.arc(e.x + e.width / 2, e.y + 6, 12, Math.PI, 0, false);
+                        ctx.lineTo(e.x + e.width / 2 + 10, e.y + 8);
+                        ctx.lineTo(e.x + e.width / 2 - 10, e.y + 8);
                         ctx.closePath();
                         ctx.fill();
-                        
-                        // Red crest plume
                         ctx.fillStyle = "#d32f2f";
-                        ctx.fillRect(e.x + e.width/2 - 4, e.y - 12, 8, 7);
-                        ctx.beginPath();
-                        ctx.arc(e.x + e.width/2, e.y - 12, 8, Math.PI, 0, false);
-                        ctx.fill();
+                        ctx.fillRect(e.x + e.width / 2 - 4, e.y - 12, 8, 7);
 
-                        // Legs & Walk animation
-                        ctx.lineWidth = 4;
-                        ctx.strokeStyle = "#ffdbac";
-                        let step = Math.sin(gameFrame * 0.15) * 8;
-                        ctx.beginPath();
-                        ctx.moveTo(e.x + 12, e.y + e.height - 8);
-                        ctx.lineTo(e.x + 12 + step, e.y + e.height);
-                        ctx.moveTo(e.x + e.width - 12, e.y + e.height - 8);
-                        ctx.lineTo(e.x + e.width - 12 - step, e.y + e.height);
-                        ctx.stroke();
-                        
-                        // Sandals
-                        ctx.fillStyle = "#3e2723";
-                        ctx.fillRect(e.x + 10 + step, e.y + e.height - 2, 6, 3);
-                        ctx.fillRect(e.x + e.width - 14 - step, e.y + e.height - 2, 6, 3);
-
-                        // Bronze shield & spear
+                        // Spear & Shield
                         let weaponSide = e.dir > 0 ? 1 : -1;
-                        
-                        // Spear
-                        ctx.fillStyle = "#5d4037"; // wooden shaft
+                        ctx.fillStyle = "#5d4037";
                         let spX = weaponSide > 0 ? e.x + e.width - 6 : e.x + 6;
                         ctx.fillRect(spX, e.y + 4, 3, e.height - 4);
-                        ctx.fillStyle = "#90a4ae"; // steel head
+                        ctx.fillStyle = "#90a4ae";
                         ctx.beginPath();
                         ctx.moveTo(spX - 2, e.y + 4);
                         ctx.lineTo(spX + 1.5, e.y - 6);
@@ -815,7 +1000,7 @@ const module1 = {
                         ctx.closePath();
                         ctx.fill();
 
-                        // Round Bronze Shield (held in front)
+                        // Bronze shield
                         ctx.fillStyle = "#cd7f32";
                         ctx.beginPath();
                         let shX = weaponSide > 0 ? e.x + 6 : e.x + e.width - 20;
@@ -824,72 +1009,39 @@ const module1 = {
                         ctx.strokeStyle = "#ffd700";
                         ctx.lineWidth = 1.5;
                         ctx.stroke();
-                        // Central stud
-                        ctx.fillStyle = "#ffd700";
-                        ctx.beginPath();
-                        ctx.arc(shX + 7, e.y + 32, 3, 0, Math.PI * 2);
-                        ctx.fill();
                     } else {
-                        // Burlón (Heckler)
-                        // Wearing plain, baggy greyish-purple robes and mocking hood
-                        ctx.fillStyle = "#6a1b9a"; // Heckler purple robe
+                        // Burlón / Heckler
+                        ctx.fillStyle = "#6a1b9a";
                         ctx.fillRect(e.x + 6, e.y + 16, e.width - 12, e.height - 16);
-                        
-                        // Head
                         ctx.fillStyle = "#ffdbac";
                         ctx.beginPath();
-                        ctx.arc(e.x + e.width/2, e.y + 10, 9, 0, Math.PI*2);
+                        ctx.arc(e.x + e.width / 2, e.y + 10, 9, 0, Math.PI * 2);
                         ctx.fill();
-                        
-                        // Golden mocking hood/turban
                         ctx.fillStyle = "#fbc02d";
-                        ctx.fillRect(e.x + e.width/2 - 11, e.y - 1, 22, 6);
-                        ctx.beginPath();
-                        ctx.arc(e.x + e.width/2, e.y - 1, 9, Math.PI, 0, false);
-                        ctx.fill();
-
-                        // Legs & Walk animation
-                        ctx.lineWidth = 4;
-                        ctx.strokeStyle = "#ffdbac";
-                        let step = Math.sin(gameFrame * 0.2) * 8;
-                        ctx.beginPath();
-                        ctx.moveTo(e.x + 12, e.y + e.height - 4);
-                        ctx.lineTo(e.x + 12 + step, e.y + e.height);
-                        ctx.moveTo(e.x + e.width - 12, e.y + e.height - 4);
-                        ctx.lineTo(e.x + e.width - 12 - step, e.y + e.height);
-                        ctx.stroke();
+                        ctx.fillRect(e.x + e.width / 2 - 11, e.y - 1, 22, 6);
                     }
                     ctx.restore();
                 });
                 ctx.restore();
 
-                // Draw end level guide arrow (pointing to tents at x = 3380)
-                if (game.player.x > 2600) {
-                    let pulse = Math.sin(gameFrame * 0.15) * 8;
-                    ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    ctx.fillStyle = "#ffd700";
-                    ctx.strokeStyle = "#ffffff";
-                    ctx.lineWidth = 2.5;
-                    ctx.shadowColor = "#ffd700";
-                    ctx.shadowBlur = 15;
-                    ctx.beginPath();
-                    ctx.moveTo(3380, 290 + pulse);
-                    ctx.lineTo(3355, 255 + pulse);
-                    ctx.lineTo(3370, 255 + pulse);
-                    ctx.lineTo(3370, 220 + pulse);
-                    ctx.lineTo(3390, 220 + pulse);
-                    ctx.lineTo(3390, 255 + pulse);
-                    ctx.lineTo(3405, 255 + pulse);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 13px Outfit";
-                    ctx.textAlign = "center";
-                    ctx.fillText("TIENDAS (META) ⬇", 3380, 205 + pulse);
-                    ctx.restore();
+                // Draw Altar Prompt if player is carrying stones near the altar
+                if (!this.altar.completed && this.altarStones.some(s => s.collected)) {
+                    let dist = Math.abs(game.player.x - this.altar.x);
+                    if (dist < 180) {
+                        ctx.save();
+                        ctx.translate(-camaraX, 0);
+                        let pulse = Math.sin(gameFrame * 0.15) * 4;
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+                        ctx.fillRect(this.altar.x - 60, this.altar.y - 50 + pulse, 150, 26);
+                        ctx.strokeStyle = "#ffd700";
+                        ctx.lineWidth = 1.5;
+                        ctx.strokeRect(this.altar.x - 60, this.altar.y - 50 + pulse, 150, 26);
+                        ctx.fillStyle = "#ffd700";
+                        ctx.font = "bold 11px Outfit";
+                        ctx.textAlign = "center";
+                        ctx.fillText("¡Acércate para edificar el Altar!", this.altar.x + 15, this.altar.y - 33 + pulse);
+                        ctx.restore();
+                    }
                 }
             }
         },
@@ -997,8 +1149,9 @@ const module1 = {
 
                 // Initial dialogue (Phase 0)
                 game.dialogueQueue = [
-                    { char: "Nefi", text: "Hemos regresado a Jerusalén desde el desierto. Debemos obtener las planchas de metal de Labán." },
-                    { char: "Lamán", text: "Echemos suertes para ver quién va... ¡Ha caído sobre mí! Iré yo a la casa de Labán a pedirle las planchas." }
+                    { char: "Lehí", text: "Hijos míos, debéis regresar a Jerusalén para obtener las Planchas de Bronce de Labán." },
+                    { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado! Regresaremos a la ciudad." },
+                    { char: "Lamán", text: "Echemos suertes para ver quién va... ¡Ha caído sobre mí! Iré yo a pedir las planchas." }
                 ];
                 game.startDialogue();
                 this.lamanPathState = "waiting_dialogue";
