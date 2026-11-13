@@ -1046,18 +1046,42 @@ const module1 = {
             }
         },
 
-        // LEVEL 2: Obtaining the Plates of Brass (Stealth & Infiltration)
-        // LEVEL 2: Obtaining the Plates of Brass (Stealth & Infiltration)
+        // LEVEL 2: Obtaining the Plates of Brass (Faith, Infiltration, Sacred Sword & Covenant with Zoram)
         {
             id: 2,
             name: "Obteniendo las Planchas de Bronce",
-            desc: "Regresa a Jerusalén, recupera el tesoro familiar y obtén las planchas obedeciendo al Espíritu.",
+            desc: "Regresa a Jerusalén, obedece la voz del Espíritu, rescata los anales sagrados y pacta la libertad con Zoram.",
             maxScroll: 4000,
-            
+
             // Level introduction data
-            introTitle: "Las Planchas de Bronce",
-            introText: "El Señor manda a los hijos de Lehí regresar a Jerusalén para obtener las Planchas de Bronce. En el primer intento, Lamán es amenazado de muerte por Labán. En el segundo, Labán les roba sus riquezas familiares y los persigue. Al final, Nefi debe infiltrarse solo de noche, guiado por el Espíritu Santo, para cumplir la voluntad del Señor y recuperar la sagrada historia de su pueblo.",
-            introObjective: "Cumple las fases de la misión para obtener las planchas de bronce.",
+            introTitle: "Las Planchas de Bronce: El Mandato Sagrado",
+            introText: "El Señor manda a los hijos de Lehí volver a Jerusalén para obtener las Planchas de Bronce que custodia Labán, las cuales contienen la ley de Moisés, las profecías y la genealogía de sus antepasados. Ante las quejas de sus hermanos mayores, Nefi declara con fe inquebrantable: 'Iré y haré lo que el Señor ha mandado'. Tras dos intentos fallidos donde Labán los amenaza y les roba sus riquezas familiares, un ángel celestial interviene. Finalmente, Nefi entrará a solas de noche en la ciudad, guiado únicamente por el Espíritu Santo...",
+            introObjective: "Cumple las fases de la misión: recupera las riquezas familiares, presencia la visita del ángel, infíltrate de noche guiado por el Espíritu y regresa con las Planchas de Bronce y Zoram a la tienda de Lehí.",
+            characterId: "nefi",
+
+            // Reto de Fe (Quiz Doctrinal de Cierre)
+            quiz: [
+                {
+                    pregunta: "¿Qué célebre declaración de fe pronunció Nefi cuando sus hermanos se resistían a volver a Jerusalén?",
+                    opciones: [
+                        "Iré y haré lo que el Señor ha mandado, porque sé que Él nunca da mandamientos sin preparar la vía.",
+                        "Esperaremos en el desierto a que Labán decida enviarnos las planchas voluntariamente.",
+                        "Pediremos a los ancianos del concejo de Jerusalén que intervengan legalmente por nosotros."
+                    ],
+                    correctaIndex: 0,
+                    explicacion: "1 Nefi 3:7 es uno de los pasajes fundamentales del Libro de Mormón: enseña que cuando el Señor da un mandamiento, siempre provee los medios para cumplirlo si actuamos con fe y obediencia."
+                },
+                {
+                    pregunta: "¿Por qué mandó el Espíritu a Nefi que obtuviera las planchas de bronce aun a costa de la vida de Labán?",
+                    opciones: [
+                        "Para vender las planchas de bronce en Egipto por una inmensa suma de riquezas.",
+                        "Porque era preferible que muriese un hombre inicuo a permitir que una nación entera degenerara y pereciera en la incredulidad sin las escrituras.",
+                        "Porque Labán había prometido entregar las planchas si alguien lo derrotaba en duelo público."
+                    ],
+                    correctaIndex: 1,
+                    explicacion: "1 Nefi 4:13 enseña un principio de preservación espiritual: sin los anales sagrados que contenían la ley de Dios, los descendientes de Lehí habrían perecido espiritualmente en la incredulidad."
+                }
+            ],
 
             init: function(game) {
                 game.player.x = 3500;
@@ -1068,12 +1092,21 @@ const module1 = {
                 this.checkpoint = { x: 3500, y: 400 };
                 this.cameraTargetX = undefined;
 
-                this.currentObjective = "Espera el primer intento de Lamán.";
+                this.currentObjective = "Espera el primer intento de Lamán tras echar suertes.";
                 this.objectiveTargetX = undefined;
                 this.objectiveTargetLabel = "";
 
                 // Quest engine variables
-                this.currentPhase = 0; // 0: first attempt (Laman), 1: gather gold, 2: offer gold & escape, 3: beating & angel, 4: night infiltration, 5: slay Laban & disguise, 6: get plates from Zoram, 7: return with Zoram
+                // 0: First attempt (Laman & casting lots)
+                // 1: Gather family wealth at Lehi's house
+                // 2: Offer wealth to Laban & escape persecution
+                // 3: Beating with rod in cave & Angel visitation
+                // 4: Night infiltration into Jerusalem guided by the Spirit
+                // 5: Finding Laban, Sword of Laban & taking disguise
+                // 6: Treasury vault, Zoram & retrieving Plates of Brass
+                // 7: Fleeing outside walls, oath of freedom with Zoram
+                // 8: Joyful reunion with Lehi and Sariah at the wilderness tent (1 Nephi 5)
+                this.currentPhase = 0;
                 this.alarmActive = false;
                 this.alarmTimer = 0;
                 this.gateOpening = false;
@@ -1082,12 +1115,12 @@ const module1 = {
                 this.angelTimer = 0;
                 this.beatingActive = false;
                 this.beatingTimer = 0;
-                this.lamanPathState = "idle";
+                this.lamanPathState = "waiting_dialogue";
                 this.lamanX = 3500;
                 this.lamanY = 400;
                 this.zoramOpeningGate = false;
                 this.platesCollected = false;
-                
+
                 // Trackers to prevent duplicate triggers
                 this.dialogueTriggered = 0;
                 this.phase2DialogueTriggered = false;
@@ -1096,19 +1129,21 @@ const module1 = {
                 this.phase3EndDialogueTriggered = false;
                 this.phase4Initialized = false;
                 this.phase4DialogueTriggered = false;
+                this.phase5DialogueTriggered = false;
                 this.phase6DialogueTriggered = false;
                 this.phase7DialogueTriggered = false;
                 this.oathDialogueTriggered = false;
+                this.reunionDialogueTriggered = false;
                 this.finishSpiritualTextShown = false;
 
                 // Wealth chests in Lehí's house (Phase 1)
                 this.wealthChests = [
-                    { x: 1930, y: 465, w: 40, h: 35, collected: false },
-                    { x: 2000, y: 465, w: 40, h: 35, collected: false },
-                    { x: 2070, y: 465, w: 40, h: 35, collected: false }
+                    { x: 1930, y: 465, w: 40, h: 35, collected: false, name: "Oro de Lehí" },
+                    { x: 2000, y: 465, w: 40, h: 35, collected: false, name: "Plata de Herencia" },
+                    { x: 2070, y: 465, w: 40, h: 35, collected: false, name: "Objetos Preciosos" }
                 ];
 
-                // Shadows (Rocks) for hiding in streets
+                // Shadows (Rocks) for hiding in streets during stealth
                 this.shadows = [
                     { x: 1000, y: 300, width: 200, height: 200 },
                     { x: 1800, y: 300, width: 220, height: 200 },
@@ -1117,48 +1152,50 @@ const module1 = {
 
                 // Layout
                 this.platforms = [
-                    // Palace area floor (far left)
+                    // Palace area floor (far left, x: 0 to 1500)
                     { x: 0, y: 500, width: 1500, height: 100, tipo: "suelo" },
                     // Elevated platform inside palace
                     { x: 600, y: 380, width: 300, height: 30, tipo: "plataforma" },
                     { x: 1000, y: 290, width: 300, height: 30, tipo: "plataforma" },
-                    // Locked gate (separating Treasury at x=480)
+                    // Locked gate (separating Treasury at x = 480)
                     { x: 480, y: 250, width: 40, height: 250, tipo: "puerta_cerrada" },
                     // Floating canyon platform (between palace and streets)
                     { x: 1560, y: 420, width: 80, height: 30, tipo: "plataforma" },
-                    // Jerusalem streets / Lehí's House floor
+                    // Jerusalem streets / Lehí's House floor (x: 1700 to 2800)
                     { x: 1700, y: 500, width: 1100, height: 100, tipo: "suelo" },
                     // Elevated street platforms
                     { x: 1850, y: 400, width: 250, height: 30, tipo: "plataforma" },
                     { x: 2200, y: 310, width: 300, height: 30, tipo: "plataforma" },
                     // Floating canyon platform (between streets and cave)
                     { x: 2860, y: 420, width: 80, height: 30, tipo: "plataforma" },
-                    // Wilderness / Cave floor (far right)
+                    // Wilderness / Cave floor (far right, x: 3000 to 4000)
                     { x: 3000, y: 500, width: 1000, height: 100, tipo: "suelo" }
                 ];
 
                 // Labán definition
                 this.laban = { x: 700, y: 405, hp: 1, width: 65, height: 95, state: "alive" };
 
-                // Followers
+                // Followers buffer
+                this.enemies = [];
                 this.family = [];
                 this.positionHistory = [];
-                for(let i=0; i<300; i++) {
+                for (let i = 0; i < 400; i++) {
                     this.positionHistory.push({ x: 3500, y: 400, agachado: false, jumping: false });
                 }
 
-                // Initial dialogue (Phase 0)
+                // Initial dialogue (Phase 0: The Command, "Iré y Haré", Casting Lots - 1 Nephi 3:2–11)
                 game.dialogueQueue = [
-                    { char: "Lehí", text: "Hijos míos, debéis regresar a Jerusalén para obtener las Planchas de Bronce de Labán." },
-                    { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado! Regresaremos a la ciudad." },
-                    { char: "Lamán", text: "Echemos suertes para ver quién va... ¡Ha caído sobre mí! Iré yo a pedir las planchas." }
+                    { char: "Lehí", text: "Hijos míos, he soñado un sueño en el que el Señor manda que volváis a Jerusalén. Labán tiene los anales y la genealogía de nuestros padres grabados sobre Planchas de Bronce." },
+                    { char: "Lamán", text: "¡Padre, nos pides una cosa demasiado difícil! Labán es un hombre poderoso que comanda soldados. Nos matará a todos si entramos a su casa." },
+                    { char: "Nefi", text: "¡Iré y haré lo que el Señor ha mandado, porque sé que Él nunca da mandamientos a los hombres sin prepararles la vía para que cumplan lo que les manda!" },
+                    { char: "Lamán", text: "Si tanto insistes, echemos suertes para ver cuál de nosotros irá primero a la casa de Labán... ¡La suerte ha caído sobre mí! Iré yo a demandar las planchas." }
                 ];
                 game.startDialogue();
                 this.lamanPathState = "waiting_dialogue";
             },
 
             update: function(game, gameFrame, input) {
-                // Check shadow zone hiding
+                // Check shadow zone hiding (Stealth mechanics)
                 let inShadow = false;
                 this.shadows.forEach(s => {
                     if (game.player.x > s.x && game.player.x + game.player.width < s.x + s.width &&
@@ -1179,15 +1216,15 @@ const module1 = {
                     }
                 }
 
-                // Record history for followers (Phases 1, 2, 7)
-                if (this.currentPhase === 1 || this.currentPhase === 2 || this.currentPhase === 7) {
+                // Record history for followers (Phases 1, 2, 7, 8)
+                if (this.currentPhase === 1 || this.currentPhase === 2 || this.currentPhase === 7 || this.currentPhase === 8) {
                     this.positionHistory.unshift({
                         x: game.player.x,
                         y: game.player.y,
                         agachado: game.player.agachado,
                         jumping: game.player.jumping
                     });
-                    if (this.positionHistory.length > 300) {
+                    if (this.positionHistory.length > 400) {
                         this.positionHistory.pop();
                     }
 
@@ -1202,9 +1239,8 @@ const module1 = {
                     });
                 }
 
-                // Phase 0: First Attempt (Cutscene Laman walks and runs back)
+                // Phase 0: First Attempt (Cutscene Laman walks and runs back - 1 Nephi 3:11–14)
                 if (this.currentPhase === 0) {
-                    // Lock player inputs
                     game.input.izquierda = false;
                     game.input.derecha = false;
                     game.input.saltar = false;
@@ -1214,11 +1250,9 @@ const module1 = {
                     game.player.x = 3500;
                     game.player.y = 400;
 
-                    // Camera overrides to follow Laman
                     this.cameraTargetX = this.lamanX - 400;
-
-                    // Calculate Laman's jumping Y coordinate
                     this.lamanY = 400;
+
                     if (this.lamanPathState === "walking_left") {
                         if (this.lamanX >= 2780 && this.lamanX <= 3020) {
                             let p = Math.max(0, Math.min(1, (this.lamanX - 2800) / 200));
@@ -1243,43 +1277,43 @@ const module1 = {
                     }
 
                     if (this.lamanPathState === "walking_left") {
-                        this.lamanX -= 12; // Fast cutscene walk speed
-                        
+                        this.lamanX -= 12;
                         if (this.lamanX <= 770) {
                             this.lamanX = 770;
                             this.lamanPathState = "arrived";
                             this.dialogueTriggered = 1;
                             game.dialogueQueue = [
                                 { char: "Labán", text: "¿Quién eres tú y qué buscas en mi casa a estas horas?" },
-                                { char: "Lamán", text: "Soy Lamán, hijo de Lehí. Vengo a pedirte las Planchas de Bronce que contienen los anales de nuestros antepasados." },
-                                { char: "Labán", text: "¡¿Las Planchas de Bronce?! ¡Eres un ladrón! No te daré nada, y ahora te mataré por atrevido. ¡Guardias!" }
+                                { char: "Lamán", text: "Soy Lamán, hijo de Lehí. Vengo a pedirte los anales grabados sobre las Planchas de Bronce que contienen la genealogía de mi padre." },
+                                { char: "Labán", text: "¡¿Las Planchas de Bronce?! ¡Tú eres un ladrón y te quitaré la vida por osado! ¡Guardias, prendedlo!" }
                             ];
                             game.startDialogue();
                         }
                     } else if (this.lamanPathState === "arrived" && !game.dialogueActive && this.dialogueTriggered === 1) {
                         this.lamanPathState = "running_right";
+                        window.gameAudio.playAlarm();
                     } else if (this.lamanPathState === "running_right") {
-                        this.lamanX += 18; // Fast cutscene run speed
-                        
+                        this.lamanX += 18;
                         if (this.lamanX >= 3400) {
                             this.lamanX = 3400;
                             this.lamanPathState = "returned";
                             this.dialogueTriggered = 2;
                             game.dialogueQueue = [
-                                { char: "Lamán", text: "¡Es inútil! Labán es un hombre muy poderoso, comanda a cincuenta soldados y me llamó ladrón. ¡Casi me mata! Regresemos al desierto." },
-                                { char: "Nefi", text: "¡Vive el Señor y vivimos nosotros, que no descenderemos hasta nuestro padre en el desierto hasta cumplir lo que el Señor ha mandado!" },
-                                { char: "Nefi", text: "Vayamos a la casa de nuestro padre en Jerusalén. Recojamos nuestro oro, plata y bienes, y ofrezcámoselos a Labán para comprarle las planchas." }
+                                { char: "Lamán", text: "¡Es inútil! Labán se enfureció, me llamó ladrón y mandó a sus soldados a matarme. ¡Huyamos al desierto con nuestro padre!" },
+                                { char: "Nefi", text: "¡Así como vive el Señor, y vivimos nosotros, no descenderemos hasta nuestro padre en el desierto hasta que hayamos cumplido lo que el Señor nos ha mandado!" },
+                                { char: "Nefi", text: "Vayamos a la casa de nuestro padre en Jerusalén; reunamos nuestro oro, nuestra plata y todos nuestros objetos preciosos, y ofrezcámoslos a Labán para comprarle las planchas." }
                             ];
                             game.startDialogue();
                         }
                     } else if (this.lamanPathState === "returned" && !game.dialogueActive && this.dialogueTriggered === 2) {
-                        this.currentPhase = 1; // Start Phase 1!
+                        this.currentPhase = 1;
                         this.currentObjective = "Busca y recoge las 3 riquezas en la Casa de Lehí (x = 2000)";
                         this.objectiveTargetX = 2000;
                         this.objectiveTargetLabel = "Casa de Lehí";
-                        this.cameraTargetX = undefined; // Return camera to player
+                        this.cameraTargetX = undefined;
                         this.checkpoint = { x: 3400, y: 400 };
                         game.camaraX = 2976;
+
                         // Setup brothers followers
                         this.family = [
                             { name: "Sam", color: "#a0522d", height: 90, offset: 35, healthy: true, jumping: false },
@@ -1287,49 +1321,48 @@ const module1 = {
                             { name: "Lemuel", color: "#666666", height: 94, offset: 105, healthy: true, jumping: false }
                         ];
                         this.positionHistory = [];
-                        for(let i=0; i<300; i++) {
+                        for (let i = 0; i < 400; i++) {
                             this.positionHistory.push({ x: game.player.x, y: game.player.y, agachado: game.player.agachado, jumping: game.player.jumping });
                         }
-                        game.showNotification("💰 Misión: Ve a la Casa de Lehí (en x = 2000) y recoge los 3 cofres de riquezas familiares.");
+                        game.showNotification("💰 Misión: Ve a la Casa de Lehí (x = 2000) y recoge el oro, plata y bienes familiares.");
                     }
                 }
 
-                // Phase 1: Gather Gold & Silver at Lehí's House
+                // Phase 1: Gather Gold & Silver at Lehí's House (1 Nephi 3:22–24)
                 if (this.currentPhase === 1) {
                     this.wealthChests.forEach(c => {
                         if (!c.collected && game.collides(game.player, c)) {
                             c.collected = true;
                             window.gameAudio.playCoin();
-                            game.score += 50;
-                            game.showNotification("💰 Recogiste oro y plata de la Casa de Lehí.");
+                            game.score += 60;
+                            game.showNotification("✨ Recogiste: " + c.name + " (+60 PTS)");
                         }
                     });
 
                     if (this.wealthChests.every(c => c.collected)) {
-                        this.currentPhase = 2; // Transition to Phase 2
-                        this.currentObjective = "Lleva las riquezas al Palacio de Labán (x = 750)";
+                        this.currentPhase = 2;
+                        this.currentObjective = "Lleva las riquezas familiares al Palacio de Labán (x = 750)";
                         this.objectiveTargetX = 750;
-                        this.objectiveTargetLabel = "Palacio";
+                        this.objectiveTargetLabel = "Palacio de Labán";
                         this.checkpoint = { x: 2000, y: 400 };
                         game.dialogueQueue = [
-                            { char: "Nefi", text: "¡Hemos reunido todos nuestros bienes preciosos! Ahora marchemos de nuevo al palacio de Labán para ofrecerle esta gran riqueza." }
+                            { char: "Nefi", text: "¡Hemos reunido todo nuestro oro, plata y bienes preciosos! Marchemos al palacio de Labán para ofrecérselos a cambio de las Planchas de Bronce." }
                         ];
                         game.startDialogue();
-                        game.showNotification("🏛️ Misión: Lleva las riquezas a Labán en su palacio (extremo izquierdo).");
+                        game.showNotification("🏛️ Misión: Lleva las riquezas a Labán en su palacio para comprar los anales.");
                     }
                 }
 
-                // Phase 2: Offer wealth to Laban & Escape persecution
+                // Phase 2: Offer wealth to Laban & Escape persecution (1 Nephi 3:24–27)
                 if (this.currentPhase === 2) {
                     if (game.player.x <= 850 && !this.phase2DialogueTriggered) {
                         this.phase2DialogueTriggered = true;
-                        // Lock inputs momentarily
                         game.input.izquierda = false;
                         game.input.derecha = false;
                         game.player.velX = 0;
                         game.dialogueQueue = [
-                            { char: "Nefi", text: "Labán, mira todo nuestro oro, plata y bienes preciosos. Te entregaremos todo a cambio de las Planchas de Bronce de nuestro padre." },
-                            { char: "Labán", text: "¡Vaya, qué inmensa fortuna! ¡Vuestros bienes son míos! ¡Siervos, matad a estos ladrones y traedme sus riquezas!" }
+                            { char: "Nefi", text: "Labán, mira todo nuestro oro, nuestra plata y nuestras piedras preciosas. Te entregaremos todo a cambio de las Planchas de Bronce de nuestro padre." },
+                            { char: "Labán", text: "¡Qué inmensa fortuna! ¡Codicio todo este oro! ¡Vuestras riquezas son mías, y vosotros moriréis como ladrones! ¡Siervos, matadlos!" }
                         ];
                         game.startDialogue();
                     }
@@ -1338,37 +1371,34 @@ const module1 = {
                         this.escapePhaseStarted = true;
                         this.alarmActive = true;
                         this.alarmTimer = 0;
-                        this.currentObjective = "¡HUYE! Escapa de los guardias de regreso a la cueva (x = 3500)";
+                        this.currentObjective = "¡HUYE! Escapa de los soldados de Labán hasta la cueva del desierto (x = 3500)";
                         this.objectiveTargetX = 3500;
-                        this.objectiveTargetLabel = "Cueva";
-                        // Spawn guards chasing the player
+                        this.objectiveTargetLabel = "Cueva en el Desierto";
+
                         this.enemies = [
-                            { x: 450, y: 420, type: "guard_normal", hp: 1, range: 4000, startX: 450, dir: 1, width: 50, height: 80, speed: 3.6, state: "chase" },
+                            { x: 450, y: 420, type: "guard_normal", hp: 1, range: 4000, startX: 450, dir: 1, width: 50, height: 80, speed: 3.5, state: "chase" },
                             { x: 550, y: 420, type: "guard_torch", hp: 2, range: 4000, startX: 550, dir: 1, width: 50, height: 80, speed: 3.2, state: "chase" },
                             { x: 650, y: 420, type: "guard_normal", hp: 1, range: 4000, startX: 650, dir: 1, width: 50, height: 80, speed: 3.4, state: "chase" }
                         ];
-                        game.showNotification("⚠️ ¡HUYE! Labán ha confiscado tus bienes. ¡Escapa de los guardias corriendo de regreso a la cueva!");
+                        game.showNotification("⚠️ ¡HUYE! Labán os ha arrebatado el oro y envía soldados. ¡Corre a la cavidad de la roca!");
                     }
 
                     if (this.escapePhaseStarted) {
-                        // Guards chase the player
                         this.enemies.forEach(e => {
                             if (e.hp <= 0) return;
                             e.dir = game.player.x > e.x ? 1 : -1;
                             e.x += e.speed * e.dir;
-                            
-                            // Collision with guard
                             if (game.player.inmune === 0 && game.collides(game.player, e)) {
                                 game.playerHurt();
                             }
                         });
 
-                        // Reach cave to escape
-                        if (game.player.x >= 3350) {
+                        // Reached cave
+                        if (game.player.x >= 3400) {
+                            this.currentPhase = 3;
+                            this.enemies = [];
                             this.alarmActive = false;
-                            this.enemies = []; // Clear chasing enemies
-                            this.currentPhase = 3; // Transition to Phase 3
-                            this.currentObjective = "Escucha la reprensión del Ángel.";
+                            this.currentObjective = "Presencia la intervención del Ángel del Señor.";
                             this.objectiveTargetX = undefined;
                             this.objectiveTargetLabel = "";
                             this.beatingActive = true;
@@ -1377,17 +1407,16 @@ const module1 = {
                             game.input.derecha = false;
                             game.player.velX = 0;
                             game.dialogueQueue = [
-                                { char: "Lamán", text: "¡Es el fin! Perdimos todo nuestro oro y casi nos matan. ¡Nefi, eres el culpable de esto!" },
-                                { char: "Lemuel", text: "¡Sí! Siempre hablas de la voluntad de Dios, ¡pero solo nos traes destrucción y ruina!" }
+                                { char: "Lamán", text: "¡Por tu culpa perdimos todo el oro y la herencia de nuestro padre! ¡Casi nos matan por tus insensatas ideas!" },
+                                { char: "Lemuel", text: "¡Sí! ¡Siempre pretendes gobernarnos con tus palabras! ¡Ahora pagarás por esto!" }
                             ];
                             game.startDialogue();
                         }
                     }
                 }
 
-                // Phase 3: Beating & Angel Visitation
+                // Phase 3: Beating with a Rod & The Angel's Visitation (1 Nephi 3:28–31)
                 if (this.currentPhase === 3) {
-                    // Lock player controls
                     game.input.izquierda = false;
                     game.input.derecha = false;
                     game.input.saltar = false;
@@ -1396,17 +1425,17 @@ const module1 = {
 
                     if (this.beatingActive) {
                         this.beatingTimer++;
-                        if (this.beatingTimer % 30 === 0) {
+                        if (this.beatingTimer % 35 === 0) {
                             window.gameAudio.playHit();
                         }
 
-                        if (this.beatingTimer >= 120 && !game.dialogueActive && !this.angelDialogueTriggered) {
+                        if (this.beatingTimer >= 100 && !game.dialogueActive && !this.angelDialogueTriggered) {
                             this.angelDialogueTriggered = true;
                             this.angelActive = true;
                             window.gameAudio.playPowerUp();
                             game.dialogueQueue = [
-                                { char: "Ángel del Señor", text: "¿Por qué golpeáis a vuestro hermano menor con una vara? ¿No sabéis que el Señor lo ha escogido para ser vuestro gobernante por causa de vuestras iniquidades?" },
-                                { char: "Ángel del Señor", text: "Subid de nuevo a Jerusalén. El Señor entregará a Labán en vuestras manos." }
+                                { char: "Ángel del Señor", text: "¿Por qué golpeáis a vuestro hermano menor con una vara? ¿No sabéis que el Señor lo ha escogido para ser vuestro gobernante a causa de vuestras iniquidades?" },
+                                { char: "Ángel del Señor", text: "Subid de nuevo a Jerusalén; el Señor entregará a Labán en vuestras manos." }
                             ];
                             game.startDialogue();
                         }
@@ -1417,212 +1446,156 @@ const module1 = {
                         this.angelActive = false;
                         this.beatingActive = false;
                         game.dialogueQueue = [
-                            { char: "Nefi", text: "Hermanos, subamos de nuevo a Jerusalén. El Señor es más poderoso que Labán y sus cincuenta." },
-                            { char: "Lamán", text: "No entraremos a la ciudad de noche. Los guardias nos atraparán y moriremos." },
-                            { char: "Nefi", text: "Yo iré solo de noche, guiado por el Espíritu, no sabiendo de antemano lo que habré de hacer. Esperadme aquí en la cueva." }
+                            { char: "Lamán", text: "¿Cómo es posible que el Señor entregue a Labán en nuestras manos? Es un hombre poderoso que comanda a cincuenta soldados." },
+                            { char: "Nefi", text: "¡Seamos fieles y fuertes como Moisés cuando el Mar Rojo se apartó! El Señor es más poderoso que Labán y sus decenas de millares." },
+                            { char: "Nefi", text: "Ocultaos vosotros fuera de los muros de la ciudad. Yo entraré a solas de noche en Jerusalén, guiado por el Espíritu Santo." }
                         ];
                         game.startDialogue();
                     }
 
                     if (this.phase3EndDialogueTriggered && !game.dialogueActive) {
-                        this.currentPhase = 4; // Start Phase 4!
-                        this.currentObjective = "Infiltrate a Jerusalén y encuentra a Labán (x = 900)";
-                        this.objectiveTargetX = 900;
+                        this.currentPhase = 4;
+                        this.currentObjective = "Infíltrate en Jerusalén de noche y busca a Labán (x = 880)";
+                        this.objectiveTargetX = 880;
                         this.objectiveTargetLabel = "Labán ebrio";
                         this.checkpoint = { x: 2800, y: 400 };
-                        this.family = []; // Nefi goes alone!
-                        game.showNotification("🌙 Infiltración nocturna: Avanza solo hacia Jerusalén. Evita los guardias de patrulla.");
+                        this.family = []; // Nefi enters alone into the city!
+                        game.showNotification("🌙 Infiltración nocturna: Avanza solo y usa las sombras (▼) para evadir las patrullas.");
                     }
                 }
 
-                // Phase 4: Night Infiltration - Find Laban Drunk
+                // Phase 4: Night Infiltration Guided by the Spirit (1 Nephi 4:5–8)
                 if (this.currentPhase === 4) {
                     if (!this.phase4Initialized) {
                         this.phase4Initialized = true;
-                        // Spawn patrolling guards in streets
                         this.enemies = [
                             { x: 1300, y: 420, type: "guard_normal", hp: 1, range: 120, startX: 1300, dir: -1, width: 50, height: 80, speed: 2, state: "patrol" },
                             { x: 1900, y: 420, type: "guard_torch", hp: 2, range: 100, startX: 1900, dir: 1, width: 50, height: 80, speed: 1.5, state: "patrol" },
                             { x: 2500, y: 420, type: "guard_torch", hp: 2, range: 120, startX: 2500, dir: -1, width: 50, height: 80, speed: 1.8, state: "patrol" }
                         ];
-                        // Place Labán drunk on the floor near palace
-                        this.laban = { x: 900, y: 405, hp: 1, width: 65, height: 95, state: "drunk" };
+                        this.laban = { x: 880, y: 410, hp: 1, width: 65, height: 95, state: "drunk" };
                     }
 
-                    // Avoid patrol vision detection
+                    // Patrol guards
                     this.enemies.forEach(e => {
-                        if (e.hp <= 0) return;
-                        
-                        // Guard gravity & col
-                        if (e.velY === undefined) e.velY = 0;
-                        e.velY += game.gravity;
-                        e.y += e.velY;
-                        
-                        this.platforms.forEach(plat => {
-                            if (plat.height <= 0) return;
-                            if (e.x + e.width - 5 > plat.x && e.x + 5 < plat.x + plat.width &&
-                                e.y + e.height >= plat.y && e.y + e.height - e.velY <= plat.y + 15) {
-                                e.y = plat.y - e.height;
-                                e.velY = 0;
-                            }
-                        });
-
-                        // Patrol movement
                         e.x += e.speed * e.dir;
                         if (Math.abs(e.x - e.startX) > e.range) e.dir *= -1;
-
-                        // Detection
-                        if (!game.player.hidden && game.player.inmune === 0) {
-                            let detected = false;
-                            if (e.type === "guard_normal") {
-                                let inFront = e.dir > 0 ? (game.player.x > e.x && game.player.x < e.x + 180) : (game.player.x < e.x && game.player.x > e.x - 180);
-                                if (inFront && Math.abs(game.player.y - e.y) < 60) detected = true;
-                            } else if (e.type === "guard_torch") {
-                                let dx = (game.player.x + game.player.width/2) - (e.x + e.width/2);
-                                let dy = (game.player.y + game.player.height/2) - (e.y + e.height/2);
-                                if (Math.sqrt(dx*dx + dy*dy) < 150) detected = true;
-                            }
-
-                            if (detected && !this.alarmActive) {
-                                this.alarmActive = true;
-                                this.alarmTimer = 0;
-                                window.gameAudio.playAlarm();
-                                game.showNotification("⚠️ ¡Te han detectado! Escóndete en las sombras oscuras usando Abajo ▼.");
-                            }
-                        }
-
-                        // Hurt player
-                        if (game.player.inmune === 0 && game.collides(game.player, e)) {
+                        if (!game.player.hidden && game.player.inmune === 0 && game.collides(game.player, e)) {
                             game.playerHurt();
                         }
                     });
 
-                    // Check if player reaches Laban drunk
-                    if (game.player.x <= 960 && game.player.x >= 840 && !this.phase4DialogueTriggered) {
+                    // Reach Labán drunken body
+                    if (game.player.x <= 960 && !this.phase4DialogueTriggered) {
                         this.phase4DialogueTriggered = true;
                         game.input.izquierda = false;
                         game.input.derecha = false;
                         game.player.velX = 0;
                         game.dialogueQueue = [
-                            { char: "Nefi", text: "¡Es Labán! Está tirado en el suelo, completamente ebrio con vino." },
-                            { char: "Nefi", text: "He desenvainado su espada. La empuñadura es de oro puro, labrada con suma finura, y la hoja es de un acero preciosísimo." },
-                            { char: "Espíritu", text: "Mátalo, porque el Señor lo ha entregado en tus manos." },
-                            { char: "Nefi", text: "Nunca he derramado sangre de hombre. Deseo cumplir la ley, pero esto me estremece." },
-                            { char: "Espíritu", text: "Mátalo. Es mejor que perezca un solo hombre a que una nación decline y perezca en la incredulidad." }
+                            { char: "Nefi", text: "Iba guiado por el Espíritu, no sabiendo de antemano lo que tendría que hacer. Y he aquí, he hallado a un hombre caído al suelo, ebrio de vino..." },
+                            { char: "Nefi", text: "¡Al acercarme descubrí que es el mismo Labán! Y percibiendo su espada, la he sacado de la vaina..." }
                         ];
                         game.startDialogue();
                     }
 
                     if (this.phase4DialogueTriggered && !game.dialogueActive) {
                         this.currentPhase = 5;
-                        this.currentObjective = "¡Saca la espada! Presiona X cerca de Labán (x = 900)";
-                        this.objectiveTargetX = 900;
-                        this.objectiveTargetLabel = "Labán ebrio";
-                        game.showNotification("⚔️ Misión: Párate junto a Labán y presiona X (Atacar) para obedecer al Espíritu.");
+                        this.currentObjective = "Examina la Espada de Labán y cumple la voz del Espíritu (Presiona X o ⚔️)";
+                        this.objectiveTargetX = 880;
+                        this.objectiveTargetLabel = "Espada de Labán";
                     }
                 }
 
-                // Phase 5: Slay Laban & Disguise
+                // Phase 5: The Sword of Laban & Voice of the Spirit (1 Nephi 4:9–19)
                 if (this.currentPhase === 5) {
-                    if (game.player.x <= 960 && game.player.x >= 840 && input.atacar) {
-                        input.atacar = false;
-                        this.laban.state = "dead";
+                    // Interaction to slay Laban and don his armor
+                    if (Math.abs(game.player.x - 880) < 60 && (input.atacar || input.crafting)) {
+                        if (!this.phase5DialogueTriggered) {
+                            this.phase5DialogueTriggered = true;
+                            window.gameAudio.playAttack();
+                            game.dialogueQueue = [
+                                { char: "Nefi", text: "El puño es de oro puro, labrado con primor, y la hoja de un acero finísimo. Mas me sobrecogí y dije: Yo nunca he derramado sangre humana." },
+                                { char: "La Voz del Espíritu", text: "Mátalo, porque el Señor lo ha puesto en tus manos. Es preferible que muera un hombre a dejar que una nación entera degenere y perezca en la incredulidad." },
+                                { char: "Nefi", text: "Y recordando la promesa del Señor, obedecí la voz del Espíritu. Ahora tomaré las vestiduras de Labán y me ceñiré con su armadura para hacerme pasar por él." }
+                            ];
+                            game.startDialogue();
+                        }
+                    }
+
+                    if (this.phase5DialogueTriggered && !game.dialogueActive) {
+                        this.currentPhase = 6;
                         this.disguised = true;
-                        window.gameAudio.playHit();
+                        this.laban.state = "dead";
                         window.gameAudio.playPowerUp();
-                        this.currentPhase = 6; // Start Phase 6
-                        this.currentObjective = "Habla con Zoram en la Tesorería (x = 550)";
-                        this.objectiveTargetX = 550;
-                        this.objectiveTargetLabel = "Zoram";
-                        this.checkpoint = { x: 900, y: 400 };
-                        game.dialogueQueue = [
-                            { char: "Nefi", text: "He cortado la cabeza de Labán con su propia espada. Me he puesto su armadura, sus vestidos y me ceñí su espada de acero." },
-                            { char: "Nefi", text: "Con este disfraz podré infiltrarme en la Tesorería. Los guardias pensarán que soy Labán." }
-                        ];
-                        game.startDialogue();
-                        game.showNotification("🔑 Misión: Habla con Zoram en la entrada de la Tesorería (en x = 550) para obtener las Planchas.");
+                        this.currentObjective = "Ve a la tesorería de Labán (x = 350) y habla con su siervo Zoram.";
+                        this.objectiveTargetX = 350;
+                        this.objectiveTargetLabel = "Zoram en la Tesorería";
+                        this.enemies = []; // Guards won't attack Laban!
+                        game.showNotification("🛡️ ¡Disfraz de Labán equipado! Los soldados te respetarán. Dirígete a la tesorería.");
                     }
                 }
 
-                // Phase 6: Zoram & Retrieve Plates from Treasury
+                // Phase 6: Treasury, Zoram & The Plates of Brass (1 Nephi 4:20–26)
                 if (this.currentPhase === 6) {
-                    // Disguised: patrolling guards ignore Nefi!
-                    this.enemies.forEach(e => {
-                        // Move guards normally
-                        e.x += e.speed * e.dir;
-                        if (Math.abs(e.x - e.startX) > e.range) e.dir *= -1;
-                    });
-
-                    // Talk to Zoram
-                    if (game.player.x <= 600 && game.player.x >= 500 && !this.phase6DialogueTriggered) {
+                    if (game.player.x <= 450 && !this.phase6DialogueTriggered) {
                         this.phase6DialogueTriggered = true;
                         game.input.izquierda = false;
                         game.input.derecha = false;
                         game.player.velX = 0;
                         game.dialogueQueue = [
-                            { char: "Nefi (como Labán)", text: "Zoram, trae las Planchas de Bronce de la Tesorería. Debemos llevarlas a mis hermanos mayores fuera de las murallas de la ciudad." },
-                            { char: "Zoram", text: "Sí, mi señor Labán. Creí que os encontrabais reunido con los ancianos de los judíos en la sinagoga. Iré de inmediato por las planchas de metal." }
+                            { char: "Nefi (como Labán)", text: "¡Zoram, siervo mío! Tráeme las llaves y acompáñame al lugar del tesoro para extraer los anales grabados sobre las Planchas de Bronce." },
+                            { char: "Zoram", text: "A vuestra orden, amo Labán. Veo vuestra espada y vuestras insignias. Enseguida abro la gran reja de la tesorería para entregaros los sagrados anales." }
                         ];
                         game.startDialogue();
                     }
 
                     if (this.phase6DialogueTriggered && !game.dialogueActive && !this.zoramOpeningGate) {
                         this.zoramOpeningGate = true;
-                        this.gateOpening = true;
-                        this.currentObjective = "Entra a la bóveda y recoge las Planchas (x = 150)";
-                        this.objectiveTargetX = 150;
-                        this.objectiveTargetLabel = "Planchas";
-                        window.gameAudio.playPowerUp();
-                    }
-
-                    // Slide opening gate height
-                    let gate = this.platforms[3];
-                    if (gate.height > 0 && this.gateOpening) {
-                        gate.height -= 3;
-                        if (gate.height <= 0) {
-                            gate.height = 0;
-                            this.gateOpening = false;
+                        window.gameAudio.playSelect();
+                        // Open treasury gate smoothly
+                        let gate = this.platforms.find(p => p.tipo === "puerta_cerrada");
+                        if (gate) {
+                            gate.height = 0; // Gate opens!
                         }
+                        this.currentObjective = "Entra a la bóveda y recoge las Planchas de Bronce (x = 150)";
+                        this.objectiveTargetX = 150;
+                        this.objectiveTargetLabel = "Planchas de Bronce";
                     }
 
-                    // Pick up plates inside the vault
-                    if (this.zoramOpeningGate && !this.platesCollected && game.player.x <= 200) {
+                    // Collect the Plates of Brass
+                    if (this.zoramOpeningGate && !this.platesCollected && game.player.x <= 180) {
                         this.platesCollected = true;
-                        window.gameAudio.playCoin();
-                        game.score += 200;
-                        game.dialogueQueue = [
-                            { char: "Nefi", text: "¡Tengo las Planchas de Bronce! Zoram, sígueme fuera de la ciudad con los hermanos mayores." },
-                            { char: "Zoram", text: "Entendido, señor. Marchemos deprisa." }
-                        ];
-                        game.startDialogue();
-                        this.currentPhase = 7; // Start Phase 7!
-                        this.currentObjective = "Lleva las Planchas y guía a Zoram a la cueva (x = 3500)";
-                        this.objectiveTargetX = 3500;
-                        this.objectiveTargetLabel = "Cueva";
-                        this.checkpoint = { x: 1500, y: 400 };
-                        // Zoram joins as follower
+                        window.gameAudio.playWin();
+                        game.score += 250;
+                        game.showNotification("📖 ¡Planchas de Bronce obtenidas! Sagrados anales en tu poder (+250 PTS).");
+
+                        this.currentPhase = 7;
+                        this.currentObjective = "Sal de Jerusalén con Zoram y reúnete con tus hermanos (x = 3200)";
+                        this.objectiveTargetX = 3200;
+                        this.objectiveTargetLabel = "Afueras de la Ciudad";
+
+                        // Zoram follows Nephi
                         this.family = [
-                            { name: "Zoram", color: "#795548", height: 90, offset: 35, healthy: true, jumping: false }
+                            { name: "Zoram", color: "#607d8b", height: 86, offset: 35, healthy: true, jumping: false }
                         ];
                         this.positionHistory = [];
-                        for(let i=0; i<300; i++) {
-                            this.positionHistory.push({ x: game.player.x, y: game.player.y, agachado: game.player.agachado, jumping: game.player.jumping });
+                        for (let i = 0; i < 400; i++) {
+                            this.positionHistory.push({ x: game.player.x, y: game.player.y, agachado: false, jumping: false });
                         }
-                        game.showNotification("⛰️ Misión: Lleva las Planchas de Bronce y guía a Zoram de regreso a la cueva (en x = 3500).");
                     }
                 }
 
-                // Phase 7: Escape with Zoram & Oath of Friendship
+                // Phase 7: Meeting brothers & The Solemn Oath with Zoram (1 Nephi 4:28–38)
                 if (this.currentPhase === 7) {
-                    if (game.player.x >= 3200 && !this.phase7DialogueTriggered) {
+                    if (game.player.x >= 3100 && !this.phase7DialogueTriggered) {
                         this.phase7DialogueTriggered = true;
                         game.input.izquierda = false;
                         game.input.derecha = false;
                         game.player.velX = 0;
                         game.dialogueQueue = [
-                            { char: "Lamán", text: "¡Oh no! ¡Es Labán que viene con un guardia a matarnos! ¡Huyamos!" },
-                            { char: "Nefi (alzando la voz)", text: "¡Hermanos, no temáis! ¡Soy yo, Nefi! He obtenido las planchas." },
-                            { char: "Zoram (aterrado)", text: "¡¿Qué?! ¡Vosotros no sois los siervos de Labán! ¡He sido engañado! ¡Tengo que huir de regreso a la ciudad!" }
+                            { char: "Lamán", text: "¡Es Labán con su espada y su armadura! ¡Ha matado a Nefi y viene por nosotros! ¡Huyamos!" },
+                            { char: "Nefi", text: "¡Hermanos míos, deteneos! ¡Soy yo, vuestro hermano Nefi! ¡Mirad, he obtenido las Planchas de Bronce!" },
+                            { char: "Zoram", text: "¡¿No eres Labán?! ¡He sido engañado! ¡Auxilio, guardias de Jerusalén!" }
                         ];
                         game.startDialogue();
                     }
@@ -1630,16 +1603,55 @@ const module1 = {
                     if (this.phase7DialogueTriggered && !game.dialogueActive && !this.oathDialogueTriggered) {
                         this.oathDialogueTriggered = true;
                         game.dialogueQueue = [
-                            { char: "Nefi", text: "¡Zoram, detente! Te juro por mi vida y por el Señor que si nos escuchas y desciendes con nosotros al desierto, serás un hombre libre como nosotros y estarás a salvo." },
-                            { char: "Zoram", text: "Si me juráis que seré libre, haré pacto con vosotros de descender al desierto. Seré vuestro amigo y compañero." },
-                            { char: "Nefi", text: "¡Alabado sea el Señor! El pacto está hecho. Con las Planchas de Bronce y Zoram con nosotros, regresemos al desierto con nuestro padre." }
+                            { char: "Nefi", text: "¡Zoram, cálmate y escúchame! Siendo yo de grande estatura, lo sujeté con firmeza para que no huyera a dar aviso a la ciudad." },
+                            { char: "Nefi", text: "¡Te juro por el Dios viviente y por nuestras propias vidas que si desciendes con nosotros al desierto, serás un hombre libre y tendrás lugar y paz con nosotros!" },
+                            { char: "Zoram", text: "Si me juráis por el Señor que seré un hombre libre, hago juramento solemne con vosotros de descender al desierto y unirme a vuestra familia para siempre." },
+                            { char: "Nefi", text: "¡El pacto está sellado ante Dios! Nuestros temores cesan. Marchemos gozosos de regreso a la tienda de nuestro padre." }
                         ];
                         game.startDialogue();
                     }
 
-                    if (this.oathDialogueTriggered && !game.dialogueActive && !this.finishSpiritualTextShown) {
+                    if (this.oathDialogueTriggered && !game.dialogueActive) {
+                        this.currentPhase = 8; // Final climax: Return to Lehi and Sariah in wilderness!
+                        this.currentObjective = "Avanza hasta la tienda familiar en el Valle de Lemuel (x = 3700)";
+                        this.objectiveTargetX = 3700;
+                        this.objectiveTargetLabel = "Tienda de Lehí y Saríah";
+
+                        // Brothers join the joyful march
+                        this.family = [
+                            { name: "Zoram", color: "#607d8b", height: 86, offset: 35, healthy: true, jumping: false },
+                            { name: "Sam", color: "#a0522d", height: 90, offset: 70, healthy: true, jumping: false },
+                            { name: "Lamán", color: "#555555", height: 94, offset: 105, healthy: true, jumping: false },
+                            { name: "Lemuel", color: "#666666", height: 94, offset: 140, healthy: true, jumping: false }
+                        ];
+                    }
+                }
+
+                // Phase 8: The Joy of Sariah & Lehi Examining the Plates (1 Nephi 5:1–22)
+                if (this.currentPhase === 8) {
+                    if (game.player.x >= 3650 && !this.reunionDialogueTriggered) {
+                        this.reunionDialogueTriggered = true;
+                        game.input.izquierda = false;
+                        game.input.derecha = false;
+                        game.player.velX = 0;
+                        window.gameAudio.playWin();
+
+                        game.dialogueQueue = [
+                            { char: "Saríah", text: "¡Hijos míos! Os creía muertos en el desierto y lloré amargamente. Pero ahora sé con certeza que el Señor ha mandado a mi marido huir y que el Señor os ha protegido de las manos de Labán." },
+                            { char: "Lehí", text: "¡Bendito sea el Señor Dios de Israel! He escudriñado estas Planchas de Bronce y hallé que contienen los cinco libros de Moisés, las profecías de los santos profetas y la genealogía de nuestros padres." },
+                            { char: "Lehí", text: "Profetizo que estas planchas jamás perecerán ni se empañarán por el tiempo, sino que saldrán a todas las naciones del mundo. ¡Cuán sabio y misericordioso es nuestro Dios!" }
+                        ];
+                        game.startDialogue();
+                    }
+
+                    if (this.reunionDialogueTriggered && !game.dialogueActive && !this.finishSpiritualTextShown) {
                         this.finishSpiritualTextShown = true;
-                        game.completeLevel("Fui guiado por el Espíritu, no sabiendo de antemano lo que tendría que hacer.", "1 Nefi 4:6", 500);
+                        // Completes level and opens Quiz screen (Reto de Fe)
+                        game.completeLevel(
+                            "Fui guiado por el Espíritu, no sabiendo de antemano lo que tendría que hacer.",
+                            "1 Nefi 4:6",
+                            500
+                        );
                     }
                 }
 
@@ -1648,127 +1660,116 @@ const module1 = {
                     game.playerHurt();
                     if (game.player.fe > 0) {
                         game.player.x = this.checkpoint.x;
-                        game.player.y = 400;
+                        game.player.y = this.checkpoint.y;
                         game.player.velX = 0;
                         game.player.velY = 0;
-                        game.camaraX = game.player.x - 400;
-                        game.camaraX = Math.max(0, Math.min(game.camaraX, 4000 - 1024));
-                        
-                        // Reset history
                         this.positionHistory = [];
-                        for(let i=0; i<300; i++) {
-                            this.positionHistory.push({ x: game.player.x, y: game.player.y, agachado: false, jumping: false });
+                        for (let i = 0; i < 400; i++) {
+                            this.positionHistory.push({ x: this.checkpoint.x, y: this.checkpoint.y, agachado: false, jumping: false });
                         }
-                        this.family.forEach(member => {
-                            member.x = game.player.x;
-                            member.y = game.player.y;
-                        });
                     }
                 }
             },
 
             draw: function(ctx, game, gameFrame, camaraX) {
-                // Background sky Jerusalem Canyon - dark night if Phase >= 4
-                ctx.fillStyle = this.currentPhase >= 4 ? "#03010a" : "#0d0a1b";
+                // Background sky: transitions to dark night for stealth (Phase >= 4)
+                let skyGrad = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+                if (this.currentPhase >= 4 && this.currentPhase <= 7) {
+                    skyGrad.addColorStop(0, "#020108");
+                    skyGrad.addColorStop(0.5, "#090514");
+                    skyGrad.addColorStop(1, "#180924");
+                } else {
+                    skyGrad.addColorStop(0, "#0a0718");
+                    skyGrad.addColorStop(0.5, "#180f2c");
+                    skyGrad.addColorStop(1, "#2d163a");
+                }
+                ctx.fillStyle = skyGrad;
                 ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-                // Twinkling stars
-                ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-                for(let i=0; i<20; i++) {
-                    let starX = (i * 210 - camaraX * 0.15) % 1024;
+                // Twinkling celestial stars
+                ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+                for (let i = 0; i < 28; i++) {
+                    let starX = (i * 195 - camaraX * 0.1) % 1024;
                     if (starX < 0) starX += 1024;
-                    let starY = (i * 73) % 220;
-                    ctx.fillRect(starX, starY, 1.5, 1.5);
+                    let starY = (i * 67) % 230;
+                    let size = 1.2 + Math.sin(gameFrame * 0.05 + i) * 0.8;
+                    ctx.fillRect(starX, starY, size, size);
                 }
 
-                // Shadows drawing (Large rocks)
+                // Shadows drawing (Large rocks for stealth hiding)
                 ctx.save();
                 ctx.translate(-camaraX, 0);
                 this.shadows.forEach(s => {
-                    ctx.fillStyle = "rgba(12, 10, 24, 0.82)";
-                    ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+                    ctx.fillStyle = "rgba(10, 8, 20, 0.86)";
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
                     ctx.lineWidth = 1.5;
                     ctx.fillRect(s.x, s.y, s.width, s.height);
                     ctx.strokeRect(s.x, s.y, s.width, s.height);
+
+                    // Indicator icon for hiding
+                    if (this.currentPhase === 4) {
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+                        ctx.font = "bold 10px Outfit";
+                        ctx.textAlign = "center";
+                        ctx.fillText("Sombra (Agáchate con ▼)", s.x + s.width / 2, s.y + 25);
+                    }
                 });
                 ctx.restore();
 
-                // Platforms with brick textures
+                // Platforms with masonry textures
                 ctx.save();
                 ctx.translate(-camaraX, 0);
                 this.platforms.forEach(plat => {
                     if (plat.tipo === "puerta_cerrada") {
                         if (plat.height <= 0) return;
-                        
                         ctx.save();
-                        // Draw massive stone arch gate frame
+                        // Massive stone arch gate frame
                         ctx.fillStyle = "#1e1e24";
                         ctx.fillRect(plat.x - 12, 250, plat.width + 24, 250);
                         ctx.strokeStyle = "#43434d";
                         ctx.lineWidth = 3;
                         ctx.strokeRect(plat.x - 12, 250, plat.width + 24, 250);
-                        
-                        // Sliding iron portcullis (moves UP behind frame as height decreases)
+
+                        // Sliding iron portcullis bars
                         let currentGateHeight = plat.height;
-                        ctx.fillStyle = "#37474f"; // Iron gray bars
-                        
-                        // Vertical bars starting from top frame (250) down to 250 + currentGateHeight
+                        ctx.fillStyle = "#37474f";
                         for (let bx = plat.x + 4; bx < plat.x + plat.width; bx += 10) {
                             ctx.fillRect(bx, 250, 4, currentGateHeight);
                         }
-                        // Horizontal braces
                         ctx.fillRect(plat.x, 250 + 10, plat.width, 8);
-                        if (currentGateHeight > 20) {
-                            ctx.fillRect(plat.x, 250 + currentGateHeight / 2 - 4, plat.width, 8);
-                        }
-                        if (currentGateHeight > 15) {
-                            ctx.fillRect(plat.x, 250 + currentGateHeight - 15, plat.width, 8);
-                        }
-                        
-                        // Giant Golden Lock Plate with keyhole (attaches to bottom edge of rising gate)
+
+                        // Giant Golden Lock
                         if (currentGateHeight > 30) {
                             ctx.fillStyle = "#a0781c";
-                            ctx.fillRect(plat.x + plat.width/2 - 8, 250 + currentGateHeight - 30, 16, 24);
+                            ctx.fillRect(plat.x + plat.width / 2 - 8, 250 + currentGateHeight - 30, 16, 24);
                             ctx.fillStyle = "#ffd700";
                             ctx.beginPath();
-                            ctx.arc(plat.x + plat.width/2, 250 + currentGateHeight - 18, 3, 0, Math.PI * 2);
+                            ctx.arc(plat.x + plat.width / 2, 250 + currentGateHeight - 18, 3, 0, Math.PI * 2);
                             ctx.fill();
-                            ctx.fillRect(plat.x + plat.width/2 - 1.5, 250 + currentGateHeight - 18, 3, 10);
                         }
                         ctx.restore();
                         return;
                     }
-                    
+
+                    // Platform surface
                     ctx.fillStyle = plat.tipo === "suelo" ? "#19152b" : "#2f2b46";
                     ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-                    
-                    // Draw brick texture lines
+
+                    // Stone masonry seams
                     ctx.save();
                     ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
                     ctx.lineWidth = 1;
                     let brickW = 40;
                     let brickH = 15;
-                    // Horizontal lines
                     for (let bY = plat.y + brickH; bY < plat.y + plat.height; bY += brickH) {
                         ctx.beginPath();
                         ctx.moveTo(plat.x, bY);
                         ctx.lineTo(plat.x + plat.width, bY);
                         ctx.stroke();
                     }
-                    // Vertical lines (staggered)
-                    let row = 0;
-                    for (let bY = plat.y; bY < plat.y + plat.height; bY += brickH) {
-                        let offset = (row % 2) * (brickW / 2);
-                        for (let bX = plat.x + offset; bX < plat.x + plat.width; bX += brickW) {
-                            ctx.beginPath();
-                            ctx.moveTo(bX, bY);
-                            ctx.lineTo(bX, Math.min(plat.y + plat.height, bY + brickH));
-                            ctx.stroke();
-                        }
-                        row++;
-                    }
                     ctx.restore();
 
+                    // Top limestone cap
                     ctx.fillStyle = "#7986cb";
                     ctx.fillRect(plat.x, plat.y, plat.width, 5);
                 });
@@ -1777,113 +1778,70 @@ const module1 = {
                 // Draw Hiding Cave (Wilderness at x = 3300)
                 ctx.save();
                 ctx.translate(-camaraX, 0);
-                ctx.fillStyle = "rgba(5, 5, 15, 0.7)";
-                ctx.fillRect(3300, 380, 160, 120);
-                ctx.strokeStyle = "#455a64";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(3300, 380, 160, 120);
-                ctx.fillStyle = "#80deea";
-                ctx.font = "bold 11px Outfit";
-                ctx.fillText("Cueva", 3360, 370);
-                ctx.restore();
-
-                // Draw Lehí's House (Middle at x = 2000)
-                ctx.save();
-                ctx.translate(-camaraX, 0);
-                ctx.fillStyle = "#2d241e";
-                ctx.fillRect(2000, 300, 180, 200);
-                ctx.strokeStyle = "#5d4037";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(2000, 300, 180, 200);
-                // Windows
-                ctx.fillStyle = this.currentPhase >= 4 ? "rgba(0,0,0,0.8)" : "#ffd54f";
-                ctx.fillRect(2030, 340, 30, 45);
-                ctx.fillRect(2120, 340, 30, 45);
-                ctx.fillStyle = "#e0a96d";
-                ctx.font = "bold 11px Outfit";
-                ctx.fillText("Casa de Lehí", 2055, 290);
-                ctx.restore();
-
-                // Draw Jerusalem City Wall separating Street from Wilderness
-                ctx.save();
-                ctx.translate(-camaraX, 0);
-                // Grand stone arch wall
-                ctx.fillStyle = "#261c14";
-                ctx.fillRect(2820, 200, 70, 300);
-                ctx.strokeStyle = "#4d382d";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(2820, 200, 70, 300);
-                // Battlements
-                ctx.fillStyle = "#1e1510";
-                ctx.fillRect(2810, 180, 90, 20);
-                // Gate arch
-                ctx.fillStyle = "#0c081f";
+                let caveX = 3300;
+                let caveY = 320;
+                ctx.fillStyle = "#161224";
                 ctx.beginPath();
-                ctx.arc(2855, 500, 35, Math.PI, 0, false);
+                ctx.arc(caveX + 150, caveY + 180, 140, Math.PI, 0, false);
                 ctx.fill();
+                ctx.strokeStyle = "#38314f";
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
                 ctx.fillStyle = "#ffd700";
-                ctx.font = "bold 10px Outfit";
-                ctx.fillText("Muralla", 2855, 170);
+                ctx.font = "bold 11px Outfit";
+                ctx.textAlign = "center";
+                ctx.fillText("Cavidad de la Roca (Desierto)", caveX + 150, caveY + 50);
+
+                // Tent of Lehi at the end of the valley (x = 3700)
+                if (this.currentPhase === 8) {
+                    ctx.fillStyle = "#4e342e";
+                    ctx.beginPath();
+                    ctx.moveTo(3700, 500);
+                    ctx.lineTo(3780, 360);
+                    ctx.lineTo(3860, 500);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = "#ffd700";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = "#fff8e1";
+                    ctx.font = "bold 10px Outfit";
+                    ctx.fillText("Tienda de Lehí", 3780, 350);
+                }
                 ctx.restore();
 
-                // Draw Wealth chests in Phase 1
+                // Draw Wealth Chests at Lehí's House (Phase 1)
                 if (this.currentPhase === 1) {
                     ctx.save();
                     ctx.translate(-camaraX, 0);
                     this.wealthChests.forEach(c => {
-                        if (!c.collected) {
-                            ctx.fillStyle = "#ffb300"; // gold chest
-                            ctx.fillRect(c.x, c.y, c.w, c.h);
-                            ctx.fillStyle = "#3e2723";
-                            ctx.fillRect(c.x + c.w/2 - 4, c.y + 8, 8, 8);
-                        }
+                        if (c.collected) return;
+                        let bob = Math.sin(gameFrame * 0.15 + c.x) * 3;
+                        // Chest base
+                        ctx.fillStyle = "#5d4037";
+                        ctx.fillRect(c.x, c.y + bob, c.w, c.h);
+                        ctx.strokeStyle = "#ffd700";
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(c.x, c.y + bob, c.w, c.h);
+                        // Open lid with glowing gold
+                        ctx.fillStyle = "#ffd700";
+                        ctx.beginPath();
+                        ctx.arc(c.x + c.w / 2, c.y + bob + 6, 9, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(c.x + c.w / 2 - 2, c.y + bob + 4, 4, 4);
+
+                        // Label
+                        ctx.fillStyle = "#ffe082";
+                        ctx.font = "bold 9px Outfit";
+                        ctx.textAlign = "center";
+                        ctx.fillText(c.name, c.x + c.w / 2, c.y + bob - 6);
                     });
                     ctx.restore();
                 }
 
-                // Draw Laman walking in Phase 0
-                if (this.currentPhase === 0 && (this.lamanPathState === "walking_left" || this.lamanPathState === "running_right" || this.lamanPathState === "arrived")) {
-                    ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    let walkStep = (this.lamanPathState === "arrived") ? 0 : Math.sin(gameFrame * 0.2) * 8;
-                    let lx = this.lamanX;
-                    let ly = this.lamanY;
-                    
-                    // Robe
-                    ctx.fillStyle = "#555555";
-                    ctx.fillRect(lx + 8, ly + 20, 24, 65);
-                    // Head
-                    ctx.fillStyle = "#ffdbac";
-                    ctx.beginPath();
-                    ctx.arc(lx + 20, ly + 12, 10, 0, Math.PI*2);
-                    ctx.fill();
-                    // Legs
-                    ctx.lineWidth = 3;
-                    ctx.strokeStyle = "#ffdbac";
-                    ctx.beginPath();
-                    if (ly < 400) {
-                        // Jumping legs (bent knees)
-                        ctx.moveTo(lx + 12, ly + 85);
-                        ctx.lineTo(lx + 16, ly + 93);
-                        ctx.lineTo(lx + 12, ly + 98);
-                        ctx.moveTo(lx + 28, ly + 85);
-                        ctx.lineTo(lx + 24, ly + 93);
-                        ctx.lineTo(lx + 28, ly + 98);
-                    } else {
-                        ctx.moveTo(lx + 12, ly + 85);
-                        ctx.lineTo(lx + 12 + walkStep, ly + 100);
-                        ctx.moveTo(lx + 28, ly + 85);
-                        ctx.lineTo(lx + 28 - walkStep, ly + 100);
-                    }
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 9px Outfit";
-                    ctx.fillText("Lamán", lx + 20, ly - 5);
-                    ctx.restore();
-                }
-
-                // Draw Laban standing in Phase 0, 1, 2
+                // Draw Labán in his palace (Phases 0, 1, 2)
                 if (this.currentPhase <= 2) {
                     ctx.save();
                     ctx.translate(-camaraX, 0);
@@ -1892,284 +1850,121 @@ const module1 = {
                     let lw = this.laban.width;
                     let lh = this.laban.height;
 
-                    // Red cape
-                    ctx.fillStyle = "#b71c1c";
-                    ctx.fillRect(lx + 5, ly + 20, lw - 10, lh - 20);
+                    // Throne
+                    ctx.fillStyle = "#3e2723";
+                    ctx.fillRect(lx - 25, ly - 20, 95, 120);
+                    ctx.strokeStyle = "#ffd700";
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(lx - 25, ly - 20, 95, 120);
 
-                    // Skin Head
+                    // Laban Body (Arrogant noble posture)
+                    ctx.fillStyle = "#b71c1c"; // Crimson mantle
+                    ctx.fillRect(lx - 8, ly + 20, lw + 16, lh - 20);
+                    ctx.fillStyle = "#cd7f32"; // Bronze breastplate
+                    ctx.fillRect(lx, ly + 25, lw, lh - 40);
+
+                    // Head
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
-                    ctx.arc(lx + lw/2, ly + 14, 12, 0, Math.PI*2);
-                    ctx.fill();
-
-                    // Beard
-                    ctx.fillStyle = "#1a0d00";
-                    ctx.beginPath();
-                    ctx.moveTo(lx + lw/2 - 10, ly + 18);
-                    ctx.quadraticCurveTo(lx + lw/2, ly + 32, lx + lw/2 + 10, ly + 18);
+                    ctx.arc(lx + lw / 2, ly + 10, 14, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Helmet with red crest
-                    ctx.fillStyle = "#ffd700";
+                    ctx.fillStyle = "#78909c";
                     ctx.beginPath();
-                    ctx.arc(lx + lw/2, ly + 12, 13, Math.PI, 0, false);
-                    ctx.lineTo(lx + lw/2 + 11, ly + 14);
-                    ctx.lineTo(lx + lw/2 - 11, ly + 14);
-                    ctx.closePath();
+                    ctx.arc(lx + lw / 2, ly + 5, 15, Math.PI, 0, false);
                     ctx.fill();
-                    
-                    ctx.fillStyle = "#b71c1c";
-                    ctx.fillRect(lx + lw/2 - 4, ly - 8, 8, 8);
+                    ctx.fillStyle = "#d32f2f";
+                    ctx.fillRect(lx + lw / 2 - 4, ly - 18, 8, 14);
 
-                    // Eyes
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(lx + lw/2 - 6, ly + 10, 4, 3);
-                    ctx.fillRect(lx + lw/2 + 2, ly + 10, 4, 3);
-                    ctx.fillStyle = "#000000";
-                    ctx.fillRect(lx + lw/2 - 5, ly + 11, 2, 2);
-                    ctx.fillRect(lx + lw/2 + 3, ly + 11, 2, 2);
-
-                    // Gold Breastplate Armor
+                    // Golden sword at waist
                     ctx.fillStyle = "#ffd700";
-                    ctx.fillRect(lx + 10, ly + 26, lw - 20, lh - 46);
-                    ctx.fillStyle = "rgba(0,0,0,0.15)";
-                    ctx.fillRect(lx + 10, ly + 26, (lw - 20)*0.3, lh - 46);
+                    ctx.fillRect(lx + lw - 2, ly + 40, 6, 32);
 
-                    // Tunic hem
-                    ctx.fillStyle = "#d84315";
-                    ctx.fillRect(lx + 8, ly + lh - 20, lw - 16, 8);
-
-                    // Legs & Sandals
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = "#ffdbac";
-                    ctx.beginPath();
-                    ctx.moveTo(lx + 16, ly + lh - 12);
-                    ctx.lineTo(lx + 16, ly + lh);
-                    ctx.moveTo(lx + lw - 16, ly + lh - 12);
-                    ctx.lineTo(lx + lw - 16, ly + lh);
-                    ctx.stroke();
-                    ctx.fillStyle = "#3e2723";
-                    ctx.fillRect(lx + 12, ly + lh - 3, 8, 3);
-                    ctx.fillRect(lx + lw - 20, ly + lh - 3, 8, 3);
-
-                    // Steel sword at waist
                     ctx.fillStyle = "#ffd700";
-                    ctx.fillRect(lx + 5, ly + 36, 6, 8);
-                    ctx.fillStyle = "#cfd8dc";
-                    ctx.fillRect(lx + 7, ly + 44, 3, 30);
-
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 11px Outfit";
+                    ctx.font = "bold 12px Outfit";
                     ctx.textAlign = "center";
-                    ctx.fillText("Labán", lx + lw/2, ly - 12);
+                    ctx.fillText("Labán en su Palacio", lx + lw / 2, ly - 28);
                     ctx.restore();
                 }
 
-                // Draw Laban drunk in Phase 4, 5
+                // Draw Labán drunken body in the street (Phases 4 & 5)
                 if ((this.currentPhase === 4 || this.currentPhase === 5) && this.laban && this.laban.state !== "dead") {
                     ctx.save();
                     ctx.translate(-camaraX, 0);
-                    ctx.fillStyle = "#d84315";
-                    ctx.fillRect(this.laban.x, this.laban.y + 60, this.laban.height, this.laban.width);
-                    ctx.fillStyle = "#ffdbac";
-                    ctx.fillRect(this.laban.x + this.laban.height - 15, this.laban.y + 60, 15, 15);
-                    ctx.fillStyle = "#95a5a6";
-                    ctx.font = "bold 14px Outfit";
-                    ctx.fillText("Zzz...", this.laban.x + 40, this.laban.y + 40 + Math.sin(gameFrame * 0.1) * 3);
-                    ctx.restore();
-                }
+                    let lx = this.laban.x;
+                    let ly = this.laban.y;
 
-                // Draw brothers standing in cave during night infiltration
-                if (this.currentPhase >= 4) {
-                    ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    let offset = 0;
-                    const brothersList = [
-                        { name: "Sam", color: "#a0522d" },
-                        { name: "Lamán", color: "#555555" },
-                        { name: "Lemuel", color: "#666666" }
-                    ];
-                    brothersList.forEach(b => {
-                        let bx = 3400 + offset;
-                        let by = 420;
-                        
-                        // Robe
-                        ctx.fillStyle = b.color;
-                        ctx.fillRect(bx + 5, by + 16, 20, 64);
-                        ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-                        ctx.fillRect(bx + 5, by + 16, 6, 64);
+                    // Fallen body in street
+                    ctx.fillStyle = "#b71c1c";
+                    ctx.fillRect(lx, ly + 60, this.laban.height, this.laban.width);
+                    ctx.fillStyle = "#cd7f32";
+                    ctx.fillRect(lx + 15, ly + 62, this.laban.height - 30, this.laban.width - 10);
 
-                        // Belt
-                        ctx.fillStyle = b.name === "Sam" ? "#5d4037" : "#1e1e1e";
-                        ctx.fillRect(bx + 4, by + 36, 22, 5);
-
-                        // Head
-                        ctx.fillStyle = "#ffdbac";
-                        ctx.beginPath();
-                        ctx.arc(bx + 15, by + 8, 9, 0, Math.PI*2);
-                        ctx.fill();
-
-                        // Hair & Beard
-                        ctx.fillStyle = b.name === "Sam" ? "#5d4037" : "#1a0d00";
-                        ctx.fillRect(bx + 6, by, 18, 4);
-                        ctx.beginPath();
-                        ctx.moveTo(bx + 8, by + 11);
-                        ctx.quadraticCurveTo(bx + 15, by + 22, bx + 22, by + 11);
-                        ctx.fill();
-
-                        // Eyes
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(bx + 10, by + 6, 3, 3);
-                        ctx.fillRect(bx + 16, by + 6, 3, 3);
-                        ctx.fillStyle = "#000000";
-                        ctx.fillRect(bx + 11, by + 7, 1, 1);
-                        ctx.fillRect(bx + 17, by + 7, 1, 1);
-
-                        // Legs
-                        ctx.lineWidth = 4;
-                        ctx.strokeStyle = "#ffdbac";
-                        ctx.beginPath();
-                        ctx.moveTo(bx + 10, by + 78);
-                        ctx.lineTo(bx + 10, by + 80);
-                        ctx.moveTo(bx + 20, by + 78);
-                        ctx.lineTo(bx + 20, by + 80);
-                        ctx.stroke();
-
-                        ctx.fillStyle = "#ffffff";
-                        ctx.font = "bold 9px Outfit";
-                        ctx.textAlign = "center";
-                        ctx.fillText(b.name, bx + 15, by - 5);
-                        offset += 50;
-                    });
-                    ctx.restore();
-                }
-
-                // Draw Zoram standing outside Treasury in Phase 6
-                if (this.currentPhase === 6 && !this.zoramOpeningGate) {
-                    ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    let zx = 550;
-                    let zy = 420;
-                    
-                    // Robe
-                    ctx.fillStyle = "#795548"; // brown robes
-                    ctx.fillRect(zx + 5, zy + 16, 20, 64);
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-                    ctx.fillRect(zx + 5, zy + 16, 6, 64);
-
-                    // Belt
-                    ctx.fillStyle = "#3e2723";
-                    ctx.fillRect(zx + 4, zy + 36, 22, 5);
-
-                    // Head
+                    // Head fallen
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
-                    ctx.arc(zx + 15, zy + 8, 9, 0, Math.PI*2);
+                    ctx.arc(lx + this.laban.height - 10, ly + 75, 12, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Turban
-                    ctx.fillStyle = "#b0bec5";
-                    ctx.fillRect(zx + 6, zy, 18, 5);
-                    ctx.beginPath();
-                    ctx.arc(zx + 15, zy + 1, 9, Math.PI, 0, false);
-                    ctx.fill();
+                    // Drunken indicator
+                    ctx.fillStyle = "#90caf9";
+                    ctx.font = "bold 12px Outfit";
+                    ctx.fillText("Zzz... (Ebrio de vino)", lx + 20, ly + 45 + Math.sin(gameFrame * 0.1) * 3);
 
-                    // Beard
-                    ctx.fillStyle = "#78909c";
-                    ctx.beginPath();
-                    ctx.moveTo(zx + 8, zy + 11);
-                    ctx.quadraticCurveTo(zx + 15, zy + 22, zx + 22, zy + 11);
-                    ctx.fill();
-
-                    // Eyes
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(zx + 10, zy + 6, 3, 3);
-                    ctx.fillRect(zx + 16, zy + 6, 3, 3);
-                    ctx.fillStyle = "#000000";
-                    ctx.fillRect(zx + 10, zy + 7, 1, 1);
-                    ctx.fillRect(zx + 16, zy + 7, 1, 1);
-                    
-                    // Legs
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = "#ffdbac";
-                    ctx.beginPath();
-                    ctx.moveTo(zx + 10, zy + 78);
-                    ctx.lineTo(zx + 10, zy + 80);
-                    ctx.moveTo(zx + 20, zy + 78);
-                    ctx.lineTo(zx + 20, zy + 80);
-                    ctx.stroke();
-
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 9px Outfit";
-                    ctx.textAlign = "center";
-                    ctx.fillText("Zoram", zx + 15, zy - 7);
-                    ctx.restore();
-                }
-
-                // Draw Angel in Phase 3
-                if (this.angelActive) {
+                    // The Sword of Laban fallen beside him (1 Nephi 4:9)
+                    // Golden hilt and fine steel blade!
                     ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    let ax = 3250;
-                    let ay = 330 + Math.sin(gameFrame * 0.15) * 8;
-                    
-                    // Divine light shadow glow
-                    ctx.shadowColor = "#fff9c4";
-                    ctx.shadowBlur = 30;
-                    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-                    ctx.beginPath();
-                    ctx.arc(ax + 20, ay + 30, 40, 0, Math.PI*2);
-                    ctx.fill();
-                    
-                    // Robe
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(ax + 10, ay + 15, 20, 65);
-                    // Head
-                    ctx.fillStyle = "#ffdbac";
-                    ctx.beginPath();
-                    ctx.arc(ax + 20, ay + 5, 9, 0, Math.PI*2);
-                    ctx.fill();
-                    // Wings
-                    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-                    ctx.beginPath();
-                    ctx.ellipse(ax + 5, ay + 35, 10, 30, -0.4, 0, Math.PI*2);
-                    ctx.ellipse(ax + 35, ay + 35, 10, 30, 0.4, 0, Math.PI*2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = "#ffd700";
-                    ctx.font = "bold 11px Outfit";
-                    ctx.fillText("ÁNGEL", ax + 20, ay - 12);
-                    ctx.restore();
-                }
-
-                // Beating stick and dust effects
-                if (this.beatingActive) {
-                    ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    ctx.strokeStyle = "#8d6e63";
-                    ctx.lineWidth = 4;
-                    let angle = Math.sin(gameFrame * 0.4) * 0.7;
-                    
-                    // Laman beats Nefi
-                    ctx.save();
-                    ctx.translate(3460, 430);
-                    ctx.rotate(angle);
+                    ctx.translate(lx + 20, ly + 95);
+                    // Blade
+                    ctx.strokeStyle = "#e0f7fa";
+                    ctx.lineWidth = 3.5;
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
-                    ctx.lineTo(-20, -25);
+                    ctx.lineTo(40, -8);
+                    ctx.stroke();
+                    // Gold hilt
+                    ctx.strokeStyle = "#ffd700";
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.moveTo(-8, 2);
+                    ctx.lineTo(0, 0);
                     ctx.stroke();
                     ctx.restore();
-                    
-                    // Beating dust
-                    ctx.fillStyle = "rgba(238, 238, 238, 0.35)";
-                    for(let i=0; i<4; i++) {
-                        let px = 3450 + Math.sin(gameFrame + i) * 20;
-                        let py = 460 + Math.cos(gameFrame + i) * 10;
-                        ctx.beginPath();
-                        ctx.arc(px, py, 5, 0, Math.PI*2);
-                        ctx.fill();
-                    }
+
+                    // Label: Espada de Labán
+                    ctx.fillStyle = "#ffd700";
+                    ctx.font = "bold 10px Outfit";
+                    ctx.fillText("✨ Espada de Labán (Acero finísimo)", lx + 10, ly + 115);
+
+                    ctx.restore();
+                }
+
+                // Draw Zoram in Treasury (Phase 6)
+                if (this.currentPhase === 6) {
+                    ctx.save();
+                    ctx.translate(-camaraX, 0);
+                    let zx = 400;
+                    let zy = 415;
+                    // Robe
+                    ctx.fillStyle = "#607d8b";
+                    ctx.fillRect(zx, zy + 20, 28, 65);
+                    // Head
+                    ctx.fillStyle = "#ffdbac";
+                    ctx.beginPath();
+                    ctx.arc(zx + 14, zy + 12, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Keys of Treasury in hand
+                    ctx.fillStyle = "#ffd700";
+                    ctx.beginPath();
+                    ctx.arc(zx + 28, zy + 45, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(zx + 28, zy + 45, 10, 2);
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 10px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Zoram (Guardián de las Llaves)", zx + 14, zy - 5);
                     ctx.restore();
                 }
 
@@ -2177,282 +1972,181 @@ const module1 = {
                 if (!this.platesCollected) {
                     ctx.save();
                     ctx.translate(-camaraX, 0);
-                    ctx.fillStyle = "#8d6e63"; // pedestal
-                    ctx.fillRect(150, 440, 45, 60);
-                    ctx.fillStyle = "#ffd700"; // gold plate book
-                    ctx.fillRect(155, 415, 35, 25);
-                    ctx.strokeStyle = "#ff9100";
-                    ctx.strokeRect(155, 415, 35, 25);
+                    let px = 150;
+                    let py = 410;
+
+                    // Stone Pedestal
+                    ctx.fillStyle = "#37474f";
+                    ctx.fillRect(px - 10, py + 25, 60, 65);
+                    ctx.strokeStyle = "#263238";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px - 10, py + 25, 60, 65);
+
+                    // Plates of Brass (Thick golden-bronze sacred bound book)
+                    let pBob = Math.sin(gameFrame * 0.1) * 3;
+                    ctx.fillStyle = "#cd7f32"; // Deep bronze
+                    ctx.fillRect(px, py + pBob, 42, 28);
+                    ctx.strokeStyle = "#ffd700"; // Golden border
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px, py + pBob, 42, 28);
+
+                    // Binding rings
+                    ctx.fillStyle = "#ffd700";
+                    ctx.beginPath();
+                    ctx.arc(px + 8, py + pBob, 3, 0, Math.PI * 2);
+                    ctx.arc(px + 21, py + pBob, 3, 0, Math.PI * 2);
+                    ctx.arc(px + 34, py + pBob, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Sacred Golden Halo
+                    ctx.fillStyle = "rgba(255, 215, 0, 0.25)";
+                    ctx.beginPath();
+                    ctx.arc(px + 21, py + pBob + 14, 25, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#ffd700";
+                    ctx.font = "bold 10px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("Planchas de Bronce", px + 21, py + pBob - 10);
+                    ctx.restore();
+                }
+
+                // Draw Angel of the Lord in Cave (Phase 3)
+                if (this.angelActive) {
+                    ctx.save();
+                    ctx.translate(-camaraX, 0);
+                    let ax = 3520;
+                    let ay = 320;
+
+                    // Blinding Celestial Radiance
+                    let auraPulse = Math.sin(gameFrame * 0.2) * 20;
+                    let angelGrad = ctx.createRadialGradient(ax, ay + 20, 10, ax, ay + 20, 90 + auraPulse);
+                    angelGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+                    angelGrad.addColorStop(0.4, "rgba(255, 235, 59, 0.6)");
+                    angelGrad.addColorStop(1, "rgba(255, 215, 0, 0)");
+                    ctx.fillStyle = angelGrad;
+                    ctx.beginPath();
+                    ctx.arc(ax, ay + 20, 95 + auraPulse, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Angelic Wings
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                    ctx.beginPath();
+                    ctx.ellipse(ax - 28, ay + 15, 30, 14, -0.4, 0, Math.PI * 2);
+                    ctx.ellipse(ax + 28, ay + 15, 30, 14, 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Pure white robe body
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(ax - 12, ay + 10, 24, 55);
+
+                    // Head & Golden Crown
+                    ctx.fillStyle = "#fff9c4";
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#ffd700";
+                    ctx.beginPath();
+                    ctx.arc(ax, ay - 6, 8, Math.PI, 0, false);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 13px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText("¡ÁNGEL DEL SEÑOR!", ax, ay - 25);
+                    ctx.restore();
+                }
+
+                // Draw Laman walking during Phase 0
+                if (this.currentPhase === 0 && (this.lamanPathState === "walking_left" || this.lamanPathState === "running_right" || this.lamanPathState === "arrived")) {
+                    ctx.save();
+                    ctx.translate(-camaraX, 0);
+                    let lx = this.lamanX;
+                    let ly = this.lamanY;
+                    ctx.fillStyle = "#555555";
+                    ctx.fillRect(lx, ly + 20, 20, 65);
+                    ctx.fillStyle = "#ffdbac";
+                    ctx.beginPath();
+                    ctx.arc(lx + 10, ly + 10, 9, 0, Math.PI * 2);
+                    ctx.fill();
                     ctx.fillStyle = "#ffffff";
                     ctx.font = "bold 9px Outfit";
-                    ctx.fillText("Planchas", 172, 405);
+                    ctx.textAlign = "center";
+                    ctx.fillText("Lamán", lx + 10, ly - 4);
                     ctx.restore();
                 }
 
-                // Patrol guards light cones during night infiltration (Phase 4)
-                if (this.currentPhase === 4) {
+                // Draw Followers (Family & Zoram)
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                this.family.forEach(member => {
                     ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    this.enemies.forEach(e => {
-                        if (e.hp <= 0) return;
-                        
-                        if (e.type === "guard_normal") {
-                            let coneGrad = ctx.createLinearGradient(e.x, e.y, e.x + (180 * e.dir), e.y);
-                            coneGrad.addColorStop(0, "rgba(255, 235, 59, 0.22)");
-                            coneGrad.addColorStop(1, "rgba(255, 235, 59, 0)");
-                            ctx.fillStyle = coneGrad;
-                            ctx.beginPath();
-                            ctx.moveTo(e.x + e.width/2, e.y + 20);
-                            ctx.lineTo(e.x + e.width/2 + (180 * e.dir), e.y - 15);
-                            ctx.lineTo(e.x + e.width/2 + (180 * e.dir), e.y + 55);
-                            ctx.closePath();
-                            ctx.fill();
-                        } else if (e.type === "guard_torch") {
-                            let rGrad = ctx.createRadialGradient(e.x + e.width/2, e.y + e.height/2, 20, e.x + e.width/2, e.y + e.height/2, 140);
-                            rGrad.addColorStop(0, "rgba(255, 152, 0, 0.28)");
-                            rGrad.addColorStop(1, "rgba(255, 152, 0, 0)");
-                            ctx.fillStyle = rGrad;
-                            ctx.beginPath();
-                            ctx.arc(e.x + e.width/2, e.y + e.height/2, 140, 0, Math.PI*2);
-                            ctx.fill();
-                        }
+                    let fH = member.agachado ? member.height * 0.55 : member.height;
+                    let fY = member.y;
 
-                        // Patrolling guards drawing
-                        let bobY = Math.abs(Math.sin(gameFrame * 0.15)) * 4;
-                        let walkStep = Math.sin(gameFrame * 0.15) * 8;
-                        
-                        // Head & face
-                        ctx.fillStyle = "#ffdbac";
-                        ctx.fillRect(e.x + e.width/2 - 10, e.y + 4 - bobY, 20, 16);
-                        
-                        // Royal Palace Armor (Gold and purple)
-                        ctx.fillStyle = "#ffd700"; // Gold breastplate
-                        ctx.fillRect(e.x + 8, e.y + 20 - bobY, e.width - 16, e.height - 38);
-                        ctx.fillStyle = "#4a148c"; // Purple tunic
-                        ctx.fillRect(e.x + 6, e.y + e.height - 18, e.width - 12, 6);
+                    // Robe
+                    ctx.fillStyle = member.healthy ? member.color : "#d32f2f";
+                    ctx.fillRect(member.x + 10, fY + 20, 20, fH - 28);
 
-                        // Palace Helmet
-                        ctx.fillStyle = "#455a64"; // Dark iron helmet
-                        ctx.beginPath();
-                        ctx.arc(e.x + e.width/2, e.y + 6 - bobY, 11, Math.PI, 0, false);
-                        ctx.lineTo(e.x + e.width/2 + 9, e.y + 8 - bobY);
-                        ctx.lineTo(e.x + e.width/2 - 9, e.y + 8 - bobY);
-                        ctx.closePath();
-                        ctx.fill();
+                    // Head
+                    ctx.fillStyle = "#ffdbac";
+                    ctx.beginPath();
+                    ctx.arc(member.x + 20, fY + 12, 9, 0, Math.PI * 2);
+                    ctx.fill();
 
-                        // Legs & walk animation
-                        ctx.lineWidth = 4;
-                        ctx.strokeStyle = "#ffdbac";
-                        ctx.beginPath();
-                        ctx.moveTo(e.x + 12, e.y + e.height - 8);
-                        ctx.lineTo(e.x + 12 + walkStep, e.y + e.height);
-                        ctx.moveTo(e.x + e.width - 12, e.y + e.height - 8);
-                        ctx.lineTo(e.x + e.width - 12 - walkStep, e.y + e.height);
-                        ctx.stroke();
+                    // Legs
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "#ffdbac";
+                    let step = Math.sin(gameFrame * 0.15 + member.offset * 0.25) * 8;
+                    ctx.beginPath();
+                    ctx.moveTo(member.x + 14, fY + fH - 8);
+                    ctx.lineTo(member.x + 14 + step, fY + fH);
+                    ctx.moveTo(member.x + 26, fY + fH - 8);
+                    ctx.lineTo(member.x + 26 - step, fY + fH);
+                    ctx.stroke();
 
-                        // Draw torch or weapon
-                        if (e.type === "guard_torch") {
-                            let tX = e.dir > 0 ? e.x + e.width + 2 : e.x - 6;
-                            // Torch Stick
-                            ctx.fillStyle = "#5d4037";
-                            ctx.fillRect(tX, e.y + 15 - bobY, 4, 25);
-                            ctx.fillStyle = "#37474f";
-                            ctx.fillRect(tX - 2, e.y + 15 - bobY, 8, 4);
-
-                            // Torch flame particles
-                            for (let p = 0; p < 4; p++) {
-                                let offsetSeed = p * 15 + gameFrame;
-                                let pX = tX + 2 + Math.sin(offsetSeed * 0.2) * 4;
-                                let pY = e.y + 10 - bobY - (offsetSeed % 12);
-                                let pSize = 2 + (offsetSeed % 4);
-                                let colors = ["#ff3d00", "#ff9100", "#ffea00"];
-                                ctx.fillStyle = colors[p % colors.length];
-                                ctx.beginPath();
-                                ctx.arc(pX, pY, pSize, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                        } else {
-                            let spX = e.dir > 0 ? e.x + e.width - 6 : e.x + 6;
-                            ctx.fillStyle = "#5d4037"; // shaft
-                            ctx.fillRect(spX, e.y + 4 - bobY, 3, e.height - 4);
-                            ctx.fillStyle = "#ffd700"; // gold head
-                            ctx.beginPath();
-                            ctx.moveTo(spX - 3, e.y + 4 - bobY);
-                            ctx.lineTo(spX + 1.5, e.y - 8 - bobY);
-                            ctx.lineTo(spX + 6, e.y + 4 - bobY);
-                            ctx.closePath();
-                            ctx.fill();
-                        }
-                    });
+                    // Name tag
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 9px Outfit";
+                    ctx.textAlign = "center";
+                    ctx.fillText(member.name, member.x + 20, fY - 5);
                     ctx.restore();
-                }
+                });
+                ctx.restore();
 
-                // Alarm flashing screen overlay
-                if (this.alarmActive && Math.floor(gameFrame / 15) % 2 === 0) {
-                    ctx.fillStyle = "rgba(211, 47, 47, 0.12)";
-                    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                }
-
-                // Draw Family Queue/Followers (Phases 1, 2, 7)
-                if (this.currentPhase === 1 || this.currentPhase === 2 || this.currentPhase === 7) {
+                // Draw Enemies (Guards with spears & torches)
+                ctx.save();
+                ctx.translate(-camaraX, 0);
+                this.enemies.forEach(e => {
+                    if (e.hp <= 0) return;
                     ctx.save();
-                    ctx.translate(-camaraX, 0);
-                    this.family.forEach(member => {
-                        ctx.save();
-                        let fH = member.agachado ? member.height * 0.55 : member.height;
-                        let fY = member.y; // Correct Y position from history
-                        
-                        // Shadow under feet
-                        ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+                    // Armor
+                    ctx.fillStyle = "#78909c";
+                    ctx.fillRect(e.x + 8, e.y + 20, e.width - 16, e.height - 28);
+                    ctx.fillStyle = "#cd7f32";
+                    ctx.fillRect(e.x + 10, e.y + 25, e.width - 20, e.height - 40);
+
+                    // Head & helmet
+                    ctx.fillStyle = "#ffdbac";
+                    ctx.beginPath();
+                    ctx.arc(e.x + e.width / 2, e.y + 12, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = "#d32f2f";
+                    ctx.fillRect(e.x + e.width / 2 - 3, e.y - 6, 6, 8);
+
+                    // Torch if guard_torch
+                    if (e.type === "guard_torch") {
+                        let tx = e.dir > 0 ? e.x + e.width + 2 : e.x - 8;
+                        ctx.fillStyle = "#5d4037";
+                        ctx.fillRect(tx, e.y + 15, 4, 30);
+                        ctx.fillStyle = "#ff9800";
                         ctx.beginPath();
-                        ctx.ellipse(member.x + 15, fY + fH - 2, 10, 3, 0, 0, Math.PI*2);
+                        ctx.arc(tx + 2, e.y + 10, 7, 0, Math.PI * 2);
                         ctx.fill();
-
-                        // Body Robe with details
-                        ctx.fillStyle = member.healthy ? member.color : "#d32f2f";
-                        ctx.fillRect(member.x + 6, fY + 18, 18, fH - 26); // leave 8px for legs
-                        
-                        // Shading on robe
-                        ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
-                        ctx.fillRect(member.x + 6, fY + 18, 6, fH - 26);
-
-                        // Specific sashes/belts
-                        if (member.name === "Sam") {
-                            ctx.fillStyle = "#5d4037"; // brown belt
-                            ctx.fillRect(member.x + 5, fY + 36, 20, 4);
-                        } else if (member.name === "Zoram") {
-                            ctx.fillStyle = "#3e2723"; // dark leather belt
-                            ctx.fillRect(member.x + 5, fY + 36, 20, 4);
-                        } else {
-                            ctx.fillStyle = "#1e1e1e"; // dark/grey belt for Laman/Lemuel
-                            ctx.fillRect(member.x + 5, fY + 36, 20, 4);
-                        }
-
-                        // Skin Head
-                        ctx.fillStyle = "#ffdbac";
-                        ctx.beginPath();
-                        ctx.arc(member.x + 15, fY + 10, 8, 0, Math.PI*2);
-                        ctx.fill();
-
-                        // Hair and beards
-                        ctx.fillStyle = "#4e342e"; // Dark brown/black hair
-                        if (member.name === "Zoram") {
-                            // Turban for Zoram
-                            ctx.fillStyle = "#b0bec5";
-                            ctx.fillRect(member.x + 7, fY + 2, 16, 5);
-                            ctx.beginPath();
-                            ctx.arc(member.x + 15, fY + 3, 7, Math.PI, 0, false);
-                            ctx.fill();
-                            // beard
-                            ctx.fillStyle = "#78909c";
-                            ctx.beginPath();
-                            ctx.moveTo(member.x + 10, fY + 12);
-                            ctx.quadraticCurveTo(member.x + 15, fY + 22, member.x + 20, fY + 12);
-                            ctx.fill();
-                        } else {
-                            // Brothers have hair/beard
-                            ctx.fillStyle = member.name === "Sam" ? "#5d4037" : "#1a0d00"; // Sam has medium brown hair, Laman/Lemuel black
-                            // hair
-                            ctx.fillRect(member.x + 7, fY + 2, 16, 4);
-                            // beard
-                            ctx.beginPath();
-                            ctx.moveTo(member.x + 9, fY + 12);
-                            ctx.quadraticCurveTo(member.x + 15, fY + 24, member.x + 21, fY + 12);
-                            ctx.fill();
-                        }
-
-                        // Eyes
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(member.x + 12, fY + 8, 3, 3);
-                        ctx.fillRect(member.x + 16, fY + 8, 3, 3);
-                        ctx.fillStyle = "#000000";
-                        ctx.fillRect(member.x + 13, fY + 9, 1, 1);
-                        ctx.fillRect(member.x + 17, fY + 9, 1, 1);
-
-                        // Legs & feet animation
-                        ctx.lineWidth = 3;
-                        ctx.strokeStyle = "#ffdbac";
-                        let step = Math.sin(gameFrame * 0.15 + member.offset * 0.25) * 6;
-                        ctx.beginPath();
-                        ctx.moveTo(member.x + 10, fY + fH - 8);
-                        ctx.lineTo(member.x + 10 + step, fY + fH);
-                        ctx.moveTo(member.x + 20, fY + fH - 8);
-                        ctx.lineTo(member.x + 20 - step, fY + fH);
-                        ctx.stroke();
-
-                        // Name label
-                        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-                        ctx.font = "bold 9px Outfit";
-                        ctx.textAlign = "center";
-                        ctx.fillText(member.name, member.x + 15, fY - 5);
-                        ctx.restore();
-                    });
+                    }
                     ctx.restore();
-                }
-
-                // Floating overhead target arrow (when target is on screen)
-                if (this.objectiveTargetX !== undefined) {
-                    let tx = this.objectiveTargetX;
-                    let ty = 340; // Default height above ground level
-                    
-                    // Specific heights for targets
-                    if (this.currentPhase === 1) {
-                        // Lehi's House
-                        tx = 2090;
-                        ty = 230;
-                    } else if (this.currentPhase === 2) {
-                        // Palace / Laban
-                        tx = 750;
-                        ty = 330;
-                    } else if (this.currentPhase === 4 || this.currentPhase === 5) {
-                        // Laban drunk
-                        tx = 930;
-                        ty = 370;
-                    } else if (this.currentPhase === 6) {
-                        // Zoram / Pedestal
-                        if (!this.zoramOpeningGate) {
-                            tx = 565;
-                            ty = 340;
-                        } else {
-                            tx = 172;
-                            ty = 340;
-                        }
-                    } else if (this.currentPhase === 7) {
-                        // Cave
-                        tx = 3380;
-                        ty = 310;
-                    }
-
-                    // Check if target is on screen
-                    if (tx >= camaraX && tx <= camaraX + 1024) {
-                        ctx.save();
-                        ctx.translate(-camaraX, 0);
-                        let pulseY = Math.sin(gameFrame * 0.15) * 6;
-                        
-                        // Draw animated downward gold triangle
-                        ctx.fillStyle = "#ffd700";
-                        ctx.strokeStyle = "#ff9100";
-                        ctx.lineWidth = 2;
-                        ctx.shadowColor = "#ffd700";
-                        ctx.shadowBlur = 10;
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(tx, ty + pulseY);
-                        ctx.lineTo(tx - 10, ty - 16 + pulseY);
-                        ctx.lineTo(tx + 10, ty - 16 + pulseY);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.stroke();
-                        
-                        // Text Label above the arrow
-                        ctx.shadowBlur = 0;
-                        ctx.fillStyle = "#ffffff";
-                        ctx.font = "bold 10px Outfit";
-                        ctx.textAlign = "center";
-                        ctx.fillText(this.objectiveTargetLabel || "AQUÍ", tx, ty - 22 + pulseY);
-                        ctx.restore();
-                    }
-                }
+                });
+                ctx.restore();
             }
         },
 

@@ -136,15 +136,15 @@ El videojuego está construido con **HTML5 Canvas**, **JavaScript moderno (Vanil
 
 ---
 ### 📍 Nivel 1.2: Obteniendo las Planchas de Bronce
-* **Descripción corta:** *Regresa a Jerusalén, recupera el tesoro familiar y obtén las planchas obedeciendo al Espíritu.*
-* **Personaje en juego:** `nefi (por defecto)`
+* **Descripción corta:** *Regresa a Jerusalén, obedece la voz del Espíritu, rescata los anales sagrados y pacta la libertad con Zoram.*
+* **Personaje en juego:** `nefi`
 * **Extensión del escenario (`maxScroll`):** `4000 píxeles`
 * **Entidades en escena:** Plataformas: **10**, Enemigos: **0** , Coleccionables (Monedas/Frutos/Tesoros): **0**
 
 #### Introducción Narrativa del Nivel
-* **Título Modal (`introTitle`):** Las Planchas de Bronce
-* **Texto Doctrinal (`introText`):** "El Señor manda a los hijos de Lehí regresar a Jerusalén para obtener las Planchas de Bronce. En el primer intento, Lamán es amenazado de muerte por Labán. En el segundo, Labán les roba sus riquezas familiares y los persigue. Al final, Nefi debe infiltrarse solo de noche, guiado por el Espíritu Santo, para cumplir la voluntad del Señor y recuperar la sagrada historia de su pueblo."
-* **Objetivo Declarado (`introObjective`):** "Cumple las fases de la misión para obtener las planchas de bronce."
+* **Título Modal (`introTitle`):** Las Planchas de Bronce: El Mandato Sagrado
+* **Texto Doctrinal (`introText`):** "El Señor manda a los hijos de Lehí volver a Jerusalén para obtener las Planchas de Bronce que custodia Labán, las cuales contienen la ley de Moisés, las profecías y la genealogía de sus antepasados. Ante las quejas de sus hermanos mayores, Nefi declara con fe inquebrantable: 'Iré y haré lo que el Señor ha mandado'. Tras dos intentos fallidos donde Labán los amenaza y les roba sus riquezas familiares, un ángel celestial interviene. Finalmente, Nefi entrará a solas de noche en la ciudad, guiado únicamente por el Espíritu Santo..."
+* **Objetivo Declarado (`introObjective`):** "Cumple las fases de la misión: recupera las riquezas familiares, presencia la visita del ángel, infíltrate de noche guiado por el Espíritu y regresa con las Planchas de Bronce y Zoram a la tienda de Lehí."
 
 #### Funciones del Ciclo de Vida del Nivel
 * `init(game)`: Configura la posición inicial del jugador (`game.player.x, y`), reinicia el puntaje, configura las plataformas fijas, enemigos, coleccionables, puntos de control (`checkpoint`), variables de estado internas y encola los diálogos introductorios (`game.dialogueQueue`).
@@ -168,7 +168,18 @@ El videojuego está construido con **HTML5 Canvas**, **JavaScript moderno (Vanil
 * **Puntos de bonificación:** `+500 PTS`
 
 #### Reto de Fe (Quiz Doctrinal)
-* *Este nivel no utiliza trivia; su evaluación se realiza mediante mecánicas interactivas y cinemáticas.*
+* **Pregunta:** "¿Qué célebre declaración de fe pronunció Nefi cuando sus hermanos se resistían a volver a Jerusalén?"
+* **Opciones:**
+  1. ✅ **Iré y haré lo que el Señor ha mandado, porque sé que Él nunca da mandamientos sin preparar la vía.** (Correcta)
+  2. Esperaremos en el desierto a que Labán decida enviarnos las planchas voluntariamente.
+  3. Pediremos a los ancianos del concejo de Jerusalén que intervengan legalmente por nosotros.
+* **Explicación espiritual:** *1 Nefi 3:7 es uno de los pasajes fundamentales del Libro de Mormón: enseña que cuando el Señor da un mandamiento, siempre provee los medios para cumplirlo si actuamos con fe y obediencia.*
+* **Pregunta:** "¿Por qué mandó el Espíritu a Nefi que obtuviera las planchas de bronce aun a costa de la vida de Labán?"
+* **Opciones:**
+  1. Para vender las planchas de bronce en Egipto por una inmensa suma de riquezas.
+  2. ✅ **Porque era preferible que muriese un hombre inicuo a permitir que una nación entera degenerara y pereciera en la incredulidad sin las escrituras.** (Correcta)
+  3. Porque Labán había prometido entregar las planchas si alguien lo derrotaba en duelo público.
+* **Explicación espiritual:** *1 Nefi 4:13 enseña un principio de preservación espiritual: sin los anales sagrados que contenían la ley de Dios, los descendientes de Lehí habrían perecido espiritualmente en la incredulidad.*
 
 ---
 ### 📍 Nivel 1.3: La Construcción del Barco
