@@ -809,6 +809,29 @@ class GameController {
     }
 
     updatePhysics() {
+        if (!this.currentModule) {
+            this.currentModule = window["module" + this.currentModuleId];
+        }
+        const currentLvl = this.currentModule ? this.currentModule.levels[this.currentLevelIndex] : null;
+        if (currentLvl && currentLvl.spectatorMode) {
+            this.player.velX = 0;
+            this.player.velY += this.gravity;
+            this.player.y += this.player.velY;
+            if (currentLvl.platforms) {
+                currentLvl.platforms.forEach(plat => {
+                    if (this.collides(this.player, plat)) {
+                        if (this.player.velY > 0 && this.player.y + this.player.height - this.player.velY <= plat.y + 12) {
+                            this.player.y = plat.y - this.player.height;
+                            this.player.velY = 0;
+                            this.player.grounded = true;
+                            this.player.jumping = false;
+                        }
+                    }
+                });
+            }
+            return;
+        }
+
         // Crouch
         if (this.input.abajo) {
             if (!this.player.agachado) {
@@ -976,6 +999,37 @@ class GameController {
             // Draw Notification popups (Only if dialogue is NOT active to prevent overlapping)
             if (this.notification.timer > 0 && !this.dialogueActive) {
                 this.drawNotificationBox();
+            }
+
+            // Draw Spectator / Cinema Letterbox & Golden Header Banner
+            if (lvl && lvl.spectatorMode) {
+                this.ctx.save();
+                // Letterbox black bars
+                this.ctx.fillStyle = "#08080c";
+                this.ctx.fillRect(0, 0, this.canvas.width, 36);
+                this.ctx.fillRect(0, this.canvas.height - 36, this.canvas.width, 36);
+
+                // Golden framing lines
+                this.ctx.strokeStyle = "#ffd700";
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 36);
+                this.ctx.lineTo(this.canvas.width, 36);
+                this.ctx.moveTo(0, this.canvas.height - 36);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height - 36);
+                this.ctx.stroke();
+
+                // Top golden badge
+                this.ctx.fillStyle = "#ffd700";
+                this.ctx.font = "bold 13px Outfit";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("🎬 MODO ESPECTADOR: PRIMER INTENTO — 1 NEFI 3:11–14", this.canvas.width / 2, 23);
+
+                // Bottom subtitle
+                this.ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+                this.ctx.font = "italic 11px Outfit";
+                this.ctx.fillText("Presenciando la misión de Lamán ante Labán... (Espacio / Enter / Clic para diálogos)", this.canvas.width / 2, this.canvas.height - 14);
+                this.ctx.restore();
             }
         }
     }
@@ -1535,6 +1589,10 @@ class GameController {
             this.currentModule = window["module" + this.currentModuleId];
         }
         const lvl = this.currentModule.levels[this.currentLevelIndex];
+        if (lvl && lvl.spectatorMode) {
+            this.ctx.restore();
+            return;
+        }
         
         // Score/Faith HUD wrapper (Antique Dark Glass with Gold Trims)
         let hudGrad = this.ctx.createLinearGradient(20, 20, 330, 65);

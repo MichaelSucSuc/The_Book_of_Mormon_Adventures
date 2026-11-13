@@ -1118,11 +1118,14 @@ const module1 = {
                 this.zoramOpeningGate = false;
                 this.platesCollected = false;
 
-                // Laman Cinematic variables (Phase 0)
+                // Laman Cinematic variables (Phase 0: Modo Espectador)
+                this.spectatorMode = true;
                 this.lamanCutscene = true;
                 this.lamanCutsceneStage = "intro_dialogue"; // "intro_dialogue" -> "running_to_palace" -> "confronting" -> "fleeing_back" -> "reported"
-                this.lamanX = 2800;
+                this.lamanX = 2780;
                 this.lamanY = 415;
+                this.lamanDir = -1;
+                this.cutscenePursuers = [];
 
                 // Trackers to prevent duplicate triggers
                 this.phase1DialoguePlayed = false;
@@ -1183,8 +1186,8 @@ const module1 = {
                 this.enemies = [];
                 // Brothers start accompanying Nephi outside Jerusalem walls!
                 this.family = [
-                    { name: "Lemuel", color: "#666666", height: 94, offset: 40, healthy: true, jumping: false },
-                    { name: "Sam", color: "#a0522d", height: 90, offset: 75, healthy: true, jumping: false }
+                    { name: "Lemuel", color: "#666666", height: 94, offset: 40, healthy: true, jumping: false, x: 2840, y: 415 },
+                    { name: "Sam", color: "#a0522d", height: 90, offset: 75, healthy: true, jumping: false, x: 2880, y: 415 }
                 ];
                 this.positionHistory = [];
                 for (let i = 0; i < 400; i++) {
@@ -1193,8 +1196,8 @@ const module1 = {
 
                 // Initial dialogue (Phase 0: Outside the walls of Jerusalem - 1 Nephi 3:9–11)
                 game.dialogueQueue = [
-                    { char: "Nefi", text: "Hemos subido hasta la tierra de Jerusalén tras viajar por el desierto desde la tienda de nuestro padre. Ahora debemos obtener las Planchas de Bronce que custodia Labán." },
-                    { char: "Lamán", text: "¡Sigo diciendo que es una locura! Labán es poderoso y nos matará. Echemos suertes para ver quién entrará primero a su casa." },
+                    { char: "Nefi", text: "Hemos subido a la tierra de Jerusalén tras viajar por el desierto desde la tienda de nuestro padre. Ahora debemos obtener las Planchas de Bronce que custodia Labán." },
+                    { char: "Lamán", text: "¡Sigo diciendo que es una locura! Labán es un noble poderoso y comanda cincuenta soldados armados. Echemos suertes para ver quién entrará primero a su palacio." },
                     { char: "Lamán", text: "¡La suerte ha caído sobre mí! Quedaos aquí fuera de las murallas; entraré yo solo a demandar los sagrados anales." }
                 ];
                 game.startDialogue();
@@ -1253,16 +1256,20 @@ const module1 = {
                     }
 
                     if (this.lamanCutsceneStage === "running_to_palace") {
-                        this.lamanX -= 18; // Cinematic fast run
-                        this.cameraTargetX = this.lamanX - 400;
+                        this.lamanDir = -1;
+                        this.lamanX -= 12; // Smooth cinematic run speed
+                        this.cameraTargetX = this.lamanX - 480;
 
-                        if (this.lamanX <= 820) {
-                            this.lamanX = 820;
+                        if (this.lamanX <= 840) {
+                            this.lamanX = 840;
                             this.lamanCutsceneStage = "confronting";
+                            this.cameraTargetX = 580; // Focus on throne room, Labán, guards and Lamán
                             game.dialogueQueue = [
                                 { char: "Labán", text: "¡¿Quién eres tú y qué buscas en mi palacio a estas horas?!" },
-                                { char: "Lamán", text: "Soy Lamán, hijo de Lehí. Vengo por los anales grabados sobre las Planchas de Bronce que contienen la genealogía de mi padre." },
-                                { char: "Labán", text: "¡¿Las Planchas de Bronce?! ¡Tú eres un ladrón y te quitaré la vida por osado! ¡Guardias, prendedlo!" }
+                                { char: "Lamán", text: "Soy Lamán, hijo primogénito de Lehí. Vengo por los anales grabados sobre las Planchas de Bronce que contienen la genealogía de mi padre." },
+                                { char: "Labán", text: "¡¿Las Planchas de Bronce?! ¡Tú eres un vil ladrón y te quitaré la vida por osado!" },
+                                { char: "Labán", text: "¡Guardias! ¡Prended a este forastero y degolladlo! ¡Que nadie ose tocar los tesoros de Labán!" },
+                                { char: "Soldado de Labán", text: "¡A sus órdenes, amo Labán! ¡Atrápenlo, maten al intruso!" }
                             ];
                             game.startDialogue();
                         }
@@ -1271,24 +1278,48 @@ const module1 = {
                         window.gameAudio.playAlarm();
                         this.alarmActive = true;
                         this.alarmTimer = 0;
+                        this.cutscenePursuers = [
+                            { type: "guard1", x: 740, y: 415, speed: 10.4, label: "Guardia Real", weapon: "spear" },
+                            { type: "guard2", x: 670, y: 415, speed: 9.8, label: "Soldado", weapon: "torch" },
+                            { type: "laban", x: 600, y: 410, speed: 9.2, label: "Labán", weapon: "sword" }
+                        ];
                     } else if (this.lamanCutsceneStage === "fleeing_back") {
-                        this.lamanX += 22; // Flees in panic at high speed
-                        this.cameraTargetX = this.lamanX - 400;
+                        this.lamanDir = 1;
+                        this.lamanX += 11; // Flees in panic at high speed
+                        this.cameraTargetX = this.lamanX - 450;
+
+                        // Move pursuers
+                        if (this.cutscenePursuers) {
+                            this.cutscenePursuers.forEach(p => {
+                                p.x += p.speed;
+                            });
+                        }
 
                         if (this.lamanX >= 2780) {
                             this.lamanX = 2780;
                             this.lamanCutsceneStage = "reported";
                             this.alarmActive = false;
+                            // Pursuers stop at the city gate ramparts (x = 2650-2710)
+                            if (this.cutscenePursuers) {
+                                this.cutscenePursuers[0].x = 2710;
+                                this.cutscenePursuers[1].x = 2660;
+                                this.cutscenePursuers[2].x = 2600;
+                            }
                             game.dialogueQueue = [
-                                { char: "Lamán", text: "¡Socorro! ¡Labán se enfureció, me llamó ladrón y mandó a sus soldados a matarme! ¡Huyamos de regreso al desierto con nuestro padre!" },
+                                { char: "Lamán", text: "¡Uf... casi muero! ¡Labán se enfureció como una fiera, me llamó ladrón y mandó a sus soldados armados a matarme! ¡Huyamos de regreso al desierto con nuestro padre!" },
+                                { char: "Lemuel", text: "¡Lamán tiene razón! Es una locura; Labán comanda cincuenta y puede destruirnos con un gesto. ¡Volvamos a la tienda!" },
                                 { char: "Nefi", text: "¡Así como vive el Señor, y vivimos nosotros, no descenderemos hasta nuestro padre en el desierto hasta que hayamos cumplido lo que el Señor nos ha mandado!" },
-                                { char: "Nefi", text: "Vayamos a la casa de nuestro padre en Jerusalén; reunamos nuestro oro, nuestra plata y todos nuestros objetos preciosos, y ofrezcámoslos a Labán para comprarle las planchas." }
+                                { char: "Nefi", text: "Por tanto, seamos fieles en guardar los mandamientos del Señor. Vayamos a la casa de nuestro padre en Jerusalén; él dejó oro, plata y toda clase de riquezas al huir." },
+                                { char: "Nefi", text: "Reunamos ese tesoro y entreguémoslo a Labán a cambio de las Planchas de Bronce para preservar la ley y el idioma de nuestros padres." },
+                                { char: "Sam", text: "¡Nefi habla con rectitud! Te seguiremos a la casa de nuestro padre." }
                             ];
                             game.startDialogue();
                         }
                     } else if (this.lamanCutsceneStage === "reported" && !game.dialogueActive) {
                         // End cutscene, release controls to player!
+                        this.spectatorMode = false;
                         this.lamanCutscene = false;
+                        this.cutscenePursuers = [];
                         this.cameraTargetX = undefined;
                         this.currentPhase = 1;
                         this.currentObjective = "Entra a Jerusalén y recoge las 3 riquezas en la Casa de Lehí (x = 1850)";
@@ -1990,41 +2021,115 @@ const module1 = {
                     let lw = this.laban.width;
                     let lh = this.laban.height;
 
-                    // Throne
+                    // Throne in palace
                     ctx.fillStyle = "#3e2723";
                     ctx.fillRect(lx - 25, ly - 20, 95, 120);
                     ctx.strokeStyle = "#ffd700";
                     ctx.lineWidth = 3;
                     ctx.strokeRect(lx - 25, ly - 20, 95, 120);
 
-                    // Laban Body (Arrogant noble posture)
-                    ctx.fillStyle = "#b71c1c"; // Crimson mantle
-                    ctx.fillRect(lx - 8, ly + 20, lw + 16, lh - 20);
-                    ctx.fillStyle = "#cd7f32"; // Bronze breastplate
-                    ctx.fillRect(lx, ly + 25, lw, lh - 40);
+                    // If Laban is chasing Laman in Phase 0 cutscene, he is not on the throne
+                    let labanInPursuit = this.currentPhase === 0 && (this.lamanCutsceneStage === "fleeing_back" || this.lamanCutsceneStage === "reported");
 
-                    // Head
-                    ctx.fillStyle = "#ffdbac";
-                    ctx.beginPath();
-                    ctx.arc(lx + lw / 2, ly + 10, 14, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (!labanInPursuit) {
+                        // Laban Body (Arrogant noble posture)
+                        ctx.fillStyle = "#b71c1c"; // Crimson mantle
+                        ctx.fillRect(lx - 8, ly + 20, lw + 16, lh - 20);
+                        ctx.fillStyle = "#cd7f32"; // Bronze breastplate
+                        ctx.fillRect(lx, ly + 25, lw, lh - 40);
 
-                    // Helmet with red crest
-                    ctx.fillStyle = "#78909c";
-                    ctx.beginPath();
-                    ctx.arc(lx + lw / 2, ly + 5, 15, Math.PI, 0, false);
-                    ctx.fill();
-                    ctx.fillStyle = "#d32f2f";
-                    ctx.fillRect(lx + lw / 2 - 4, ly - 18, 8, 14);
+                        // Head
+                        ctx.fillStyle = "#ffdbac";
+                        ctx.beginPath();
+                        ctx.arc(lx + lw / 2, ly + 10, 14, 0, Math.PI * 2);
+                        ctx.fill();
 
-                    // Golden sword at waist
-                    ctx.fillStyle = "#ffd700";
-                    ctx.fillRect(lx + lw - 2, ly + 40, 6, 32);
+                        // Helmet with red crest
+                        ctx.fillStyle = "#78909c";
+                        ctx.beginPath();
+                        ctx.arc(lx + lw / 2, ly + 5, 15, Math.PI, 0, false);
+                        ctx.fill();
+                        ctx.fillStyle = "#d32f2f";
+                        ctx.fillRect(lx + lw / 2 - 4, ly - 18, 8, 14);
 
-                    ctx.fillStyle = "#ffd700";
-                    ctx.font = "bold 12px Outfit";
-                    ctx.textAlign = "center";
-                    ctx.fillText("Labán en su Palacio", lx + lw / 2, ly - 28);
+                        // Sword: Drawn during confrontation, sheathed at waist otherwise
+                        if (this.currentPhase === 0 && this.lamanCutsceneStage === "confronting") {
+                            // Pointing sword menacingly at Laman!
+                            ctx.strokeStyle = "#e0f7fa";
+                            ctx.lineWidth = 4;
+                            ctx.beginPath();
+                            ctx.moveTo(lx + lw - 2, ly + 35);
+                            ctx.lineTo(lx + lw + 38, ly + 22);
+                            ctx.stroke();
+                            ctx.fillStyle = "#ffd700";
+                            ctx.fillRect(lx + lw - 4, ly + 33, 8, 8);
+                        } else {
+                            ctx.fillStyle = "#ffd700";
+                            ctx.fillRect(lx + lw - 2, ly + 40, 6, 32);
+                        }
+
+                        ctx.fillStyle = "#ffd700";
+                        ctx.font = "bold 12px Outfit";
+                        ctx.textAlign = "center";
+                        ctx.fillText("Labán en su Palacio", lx + lw / 2, ly - 28);
+
+                        // Royal Guards flanking Laban during Phase 0 palace scenes
+                        if (this.currentPhase === 0) {
+                            // Guard Left
+                            let g1x = lx - 55, g1y = ly + 5;
+                            ctx.fillStyle = "#546e7a";
+                            ctx.fillRect(g1x, g1y + 20, 24, 60);
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.fillRect(g1x + 2, g1y + 24, 20, 36);
+                            ctx.fillStyle = "#ffdbac";
+                            ctx.beginPath();
+                            ctx.arc(g1x + 12, g1y + 10, 9, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "#37474f";
+                            ctx.fillRect(g1x + 3, g1y, 18, 8);
+                            // Spear upright
+                            ctx.strokeStyle = "#8d6e63";
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(g1x + 22, g1y - 20);
+                            ctx.lineTo(g1x + 22, g1y + 80);
+                            ctx.stroke();
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.beginPath();
+                            ctx.moveTo(g1x + 22, g1y - 28);
+                            ctx.lineTo(g1x + 18, g1y - 20);
+                            ctx.lineTo(g1x + 26, g1y - 20);
+                            ctx.closePath();
+                            ctx.fill();
+
+                            // Guard Right
+                            let g2x = lx + lw + 25, g2y = ly + 5;
+                            ctx.fillStyle = "#546e7a";
+                            ctx.fillRect(g2x, g2y + 20, 24, 60);
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.fillRect(g2x + 2, g2y + 24, 20, 36);
+                            ctx.fillStyle = "#ffdbac";
+                            ctx.beginPath();
+                            ctx.arc(g2x + 12, g2y + 10, 9, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "#37474f";
+                            ctx.fillRect(g2x + 3, g2y, 18, 8);
+                            // Spear upright
+                            ctx.strokeStyle = "#8d6e63";
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(g2x + 22, g2y - 20);
+                            ctx.lineTo(g2x + 22, g2y + 80);
+                            ctx.stroke();
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.beginPath();
+                            ctx.moveTo(g2x + 22, g2y - 28);
+                            ctx.lineTo(g2x + 18, g2y - 20);
+                            ctx.lineTo(g2x + 26, g2y - 20);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    }
                 }
 
                 // Draw Lamán during Phase 0 Cutscene
@@ -2038,20 +2143,30 @@ const module1 = {
                     ctx.ellipse(lx + 15, ly + 82, 18, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Robe
+                    // Robe (slate grey)
                     ctx.fillStyle = "#555555";
                     ctx.fillRect(lx + 5, ly + 20, 20, 55);
 
-                    // Head
+                    // Head & Face
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
                     ctx.arc(lx + 15, ly + 10, 10, 0, Math.PI * 2);
                     ctx.fill();
 
+                    // Eyes facing running direction
+                    let eyeOffset = this.lamanDir === 1 ? 4 : -4;
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(lx + 15 + eyeOffset - 2, ly + 8, 4, 4);
+                    ctx.fillStyle = "#000000";
+                    ctx.fillRect(lx + 15 + eyeOffset - 1, ly + 9, 2, 2);
+
                     // Legs in run stride
                     ctx.strokeStyle = "#ffdbac";
                     ctx.lineWidth = 4;
-                    let runStep = Math.sin(gameFrame * 0.35) * 12;
+                    let isMoving = this.lamanCutsceneStage === "running_to_palace" || this.lamanCutsceneStage === "fleeing_back";
+                    let runFreq = this.lamanCutsceneStage === "fleeing_back" ? 0.45 : 0.35;
+                    let runAmp = this.lamanCutsceneStage === "fleeing_back" ? 15 : 12;
+                    let runStep = isMoving ? Math.sin(gameFrame * runFreq) * runAmp : 0;
                     ctx.beginPath();
                     ctx.moveTo(lx + 10, ly + 75);
                     ctx.lineTo(lx + 10 + runStep, ly + 85);
@@ -2059,17 +2174,167 @@ const module1 = {
                     ctx.lineTo(lx + 20 - runStep, ly + 85);
                     ctx.stroke();
 
-                    // Label
+                    // Label & Panic Alerts
                     ctx.fillStyle = "#ffffff";
                     ctx.font = "bold 10px Outfit";
                     ctx.textAlign = "center";
                     ctx.fillText("Lamán", lx + 15, ly - 5);
+
                     if (this.lamanCutsceneStage === "fleeing_back") {
-                        ctx.fillStyle = "#ff5252";
-                        ctx.font = "bold 11px Outfit";
-                        ctx.fillText("¡HUYENDO DE LABÁN!", lx + 15, ly - 18);
+                        // Flashing panic indicator
+                        ctx.fillStyle = "#ff1744";
+                        ctx.font = "bold 12px Outfit";
+                        ctx.fillText("¡SOCORRO! ¡ME PERSIGUEN!", lx + 15, ly - 22);
+
+                        // Sweat droplets flying off
+                        ctx.fillStyle = "#29b6f6";
+                        let dropOffset = (gameFrame * 4) % 18;
+                        ctx.beginPath();
+                        ctx.arc(lx - 6 - dropOffset, ly + 12 - (dropOffset % 6), 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (this.lamanCutsceneStage === "running_to_palace") {
+                        ctx.fillStyle = "#ffd54f";
+                        ctx.font = "bold 10px Outfit";
+                        ctx.fillText("Hacia el palacio...", lx + 15, ly - 16);
                     }
                     ctx.restore();
+                }
+
+                // Draw Cutscene Pursuers (Labán & Royal Soldiers pursuing Lamán in Phase 0)
+                if (this.currentPhase === 0 && this.lamanCutscene && (this.lamanCutsceneStage === "fleeing_back" || this.lamanCutsceneStage === "reported") && this.cutscenePursuers) {
+                    this.cutscenePursuers.forEach(p => {
+                        ctx.save();
+                        let px = p.x;
+                        let py = p.y;
+                        let isRunning = this.lamanCutsceneStage === "fleeing_back";
+                        let stride = isRunning ? Math.sin(gameFrame * 0.4) * 14 : 0;
+
+                        // Contact shadow
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+                        ctx.beginPath();
+                        ctx.ellipse(px + 20, py + 84, 18, 5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        if (p.type === "laban") {
+                            // Laban sprinting in heavy armor & crimson mantle
+                            ctx.fillStyle = "#8e0000";
+                            ctx.fillRect(px - 14, py + 22, 18, 56);
+                            ctx.fillStyle = "#b71c1c";
+                            ctx.fillRect(px, py + 20, 36, 56);
+                            // Bronze cuirass
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.fillRect(px + 4, py + 22, 28, 36);
+                            ctx.strokeStyle = "#ffd700";
+                            ctx.lineWidth = 1.5;
+                            ctx.strokeRect(px + 4, py + 22, 28, 36);
+
+                            // Head & Helmet with red plume
+                            ctx.fillStyle = "#ffdbac";
+                            ctx.beginPath();
+                            ctx.arc(px + 18, py + 10, 11, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "#78909c";
+                            ctx.beginPath();
+                            ctx.arc(px + 18, py + 6, 12, Math.PI, 0, false);
+                            ctx.fill();
+                            ctx.fillStyle = "#d32f2f";
+                            ctx.fillRect(px + 15, py - 10, 6, 12);
+
+                            // Legs running
+                            ctx.strokeStyle = "#ffdbac";
+                            ctx.lineWidth = 4;
+                            ctx.beginPath();
+                            ctx.moveTo(px + 10, py + 74);
+                            ctx.lineTo(px + 10 + stride, py + 84);
+                            ctx.moveTo(px + 24, py + 74);
+                            ctx.lineTo(px + 24 - stride, py + 84);
+                            ctx.stroke();
+
+                            // Drawn Steel Sword of Laban in right hand pointing forward!
+                            ctx.strokeStyle = "#e0f7fa";
+                            ctx.lineWidth = 3.5;
+                            ctx.beginPath();
+                            ctx.moveTo(px + 28, py + 38);
+                            ctx.lineTo(px + 54, py + 24);
+                            ctx.stroke();
+                            ctx.fillStyle = "#ffd700";
+                            ctx.fillRect(px + 26, py + 36, 6, 6);
+
+                            // Shouting callout
+                            ctx.fillStyle = "#ffd700";
+                            ctx.font = "bold 11px Outfit";
+                            ctx.textAlign = "center";
+                            ctx.fillText("¡ATRÁPENLO!", px + 20, py - 16);
+                        } else {
+                            // Royal Guard with helmet, bronze breastplate, spear
+                            // Cloak
+                            ctx.fillStyle = "#1b5e20";
+                            ctx.fillRect(px - 6, py + 24, 12, 50);
+                            // Armor
+                            ctx.fillStyle = "#546e7a";
+                            ctx.fillRect(px + 4, py + 20, 28, 54);
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.fillRect(px + 6, py + 24, 24, 34);
+
+                            // Head & Helmet
+                            ctx.fillStyle = "#ffdbac";
+                            ctx.beginPath();
+                            ctx.arc(px + 18, py + 10, 10, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "#37474f";
+                            ctx.fillRect(px + 8, py, 20, 8);
+                            ctx.fillStyle = "#b71c1c";
+                            ctx.fillRect(px + 16, py - 7, 5, 8); // small plume
+
+                            // Legs
+                            ctx.strokeStyle = "#ffdbac";
+                            ctx.lineWidth = 4;
+                            ctx.beginPath();
+                            ctx.moveTo(px + 10, py + 72);
+                            ctx.lineTo(px + 10 + stride, py + 84);
+                            ctx.moveTo(px + 24, py + 72);
+                            ctx.lineTo(px + 24 - stride, py + 84);
+                            ctx.stroke();
+
+                            // Spear held pointing forward!
+                            ctx.strokeStyle = "#8d6e63";
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.moveTo(px - 10, py + 48);
+                            ctx.lineTo(px + 48, py + 28);
+                            ctx.stroke();
+                            // Bronze spearhead
+                            ctx.fillStyle = "#cd7f32";
+                            ctx.beginPath();
+                            ctx.moveTo(px + 48, py + 28);
+                            ctx.lineTo(px + 56, py + 24);
+                            ctx.lineTo(px + 50, py + 32);
+                            ctx.closePath();
+                            ctx.fill();
+
+                            // Torch if guard2
+                            if (p.weapon === "torch") {
+                                ctx.fillStyle = "#5d4037";
+                                ctx.fillRect(px + 12, py + 18, 4, 22);
+                                ctx.fillStyle = "#ff9800";
+                                ctx.beginPath();
+                                ctx.arc(px + 14, py + 14, 7, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.fillStyle = "#ffeb3b";
+                                ctx.beginPath();
+                                ctx.arc(px + 14, py + 12, 4, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+
+                            // Shouting callout
+                            ctx.fillStyle = "#ff5252";
+                            ctx.font = "bold 10px Outfit";
+                            ctx.textAlign = "center";
+                            let shoutText = p.weapon === "torch" ? "¡POR LABÁN!" : "¡NO ESCAPARÁS!";
+                            ctx.fillText(shoutText, px + 20, py - 14);
+                        }
+                        ctx.restore();
+                    });
                 }
 
                 // Draw Labán drunken body in the street (Phases 4 & 5)
