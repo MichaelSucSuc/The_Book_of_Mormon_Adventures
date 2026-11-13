@@ -897,10 +897,15 @@ class GameController {
     }
 
     collides(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
+        if (!rect1 || !rect2) return false;
+        let w1 = rect1.width !== undefined ? rect1.width : (rect1.w !== undefined ? rect1.w : 0);
+        let h1 = rect1.height !== undefined ? rect1.height : (rect1.h !== undefined ? rect1.h : 0);
+        let w2 = rect2.width !== undefined ? rect2.width : (rect2.w !== undefined ? rect2.w : 0);
+        let h2 = rect2.height !== undefined ? rect2.height : (rect2.h !== undefined ? rect2.h : 0);
+        return rect1.x < rect2.x + w2 &&
+               rect1.x + w1 > rect2.x &&
+               rect1.y < rect2.y + h2 &&
+               rect1.y + h1 > rect2.y;
     }
 
     render() {
