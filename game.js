@@ -1008,28 +1008,53 @@ class GameController {
             legsH = 15;
         }
 
+        // Soft ground contact shadow
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+        this.ctx.beginPath();
+        this.ctx.ellipse(x + w / 2, y + h + 2, 18, 5, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
         if (isLabanDisguise) {
-            // Laban red/orange robe
-            this.ctx.fillStyle = "#d84315";
+            // Laban crimson noble mantle/cape (flowing behind)
+            this.ctx.fillStyle = "#8e0000";
+            this.ctx.fillRect(x + 4, torY + 2, w - 8, bodyH + 8);
+
+            // Laban tunic
+            this.ctx.fillStyle = "#b71c1c";
             this.ctx.fillRect(x + 8, torY, w - 16, bodyH);
-            
-            // Gold chest armor plate
-            this.ctx.fillStyle = "#ffd700";
-            this.ctx.fillRect(x + 10, torY + 4, w - 20, bodyH * 0.6);
-            
+
+            // Polished bronze breastplate with golden sheen
+            let armorGrad = this.ctx.createLinearGradient(x + 8, torY + 2, x + w - 8, torY + bodyH * 0.65);
+            armorGrad.addColorStop(0, "#cd7f32");
+            armorGrad.addColorStop(0.5, "#ffd700");
+            armorGrad.addColorStop(1, "#8d5018");
+            this.ctx.fillStyle = armorGrad;
+            this.ctx.fillRect(x + 9, torY + 2, w - 18, bodyH * 0.62);
+            this.ctx.strokeStyle = "#ffd700";
+            this.ctx.lineWidth = 1.5;
+            this.ctx.strokeRect(x + 9, torY + 2, w - 18, bodyH * 0.62);
+
             // Skin Head
             this.ctx.fillStyle = "#ffdbac";
             this.ctx.beginPath();
-            this.ctx.arc(x + w/2, cabY, cabRad, 0, Math.PI*2);
+            this.ctx.arc(x + w / 2, cabY, cabRad, 0, Math.PI * 2);
             this.ctx.fill();
-            
+
+            // Helmet with red crest
+            this.ctx.fillStyle = "#78909c";
+            this.ctx.beginPath();
+            this.ctx.arc(x + w / 2, cabY - 2, cabRad + 2, Math.PI, 0, false);
+            this.ctx.fill();
+            this.ctx.fillStyle = "#d32f2f";
+            this.ctx.fillRect(x + w / 2 - 3, cabY - cabRad - 8, 6, 8);
+
             // Eyes
             let eyeOffset = this.player.direccion === "derecha" ? 4 : -7;
             this.ctx.fillStyle = "#ffffff";
-            this.ctx.fillRect(x + w/2 + eyeOffset, cabY - 3, 5, 4);
+            this.ctx.fillRect(x + w / 2 + eyeOffset, cabY - 3, 5, 4);
             this.ctx.fillStyle = "#000000";
-            this.ctx.fillRect(x + w/2 + eyeOffset + (this.player.direccion === "derecha" ? 2 : 0), cabY - 2, 2, 2);
-            
+            this.ctx.fillRect(x + w / 2 + eyeOffset + (this.player.direccion === "derecha" ? 2 : 0), cabY - 2, 2, 2);
+
             // Legs walk
             this.ctx.lineWidth = 5;
             this.ctx.strokeStyle = "#ffdbac";
@@ -1051,11 +1076,17 @@ class GameController {
                 this.ctx.stroke();
             }
 
-            // Draw Laban's steel sword in hand
-            this.ctx.fillStyle = "#ffd700"; // gold hilt
-            let swX = this.player.direccion === "derecha" ? x + w - 6 : x;
-            this.ctx.fillRect(swX, torY + 4, 5, 45); // sword
-            
+            // Draw Laban's steel sword with gleaming blade and gold hilt
+            let swX = this.player.direccion === "derecha" ? x + w - 4 : x - 2;
+            this.ctx.strokeStyle = "#e0f7fa";
+            this.ctx.lineWidth = 3.5;
+            this.ctx.beginPath();
+            this.ctx.moveTo(swX, torY + 8);
+            this.ctx.lineTo(swX + (this.player.direccion === "derecha" ? 6 : -6), torY + 46);
+            this.ctx.stroke();
+            this.ctx.fillStyle = "#ffd700";
+            this.ctx.fillRect(swX - 4, torY + 6, 8, 4);
+
             this.ctx.restore();
             return;
         }
@@ -1194,6 +1225,12 @@ class GameController {
 
     drawLehiSprite(x, y, w, h) {
         this.ctx.save();
+        // Soft ground contact shadow
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+        this.ctx.beginPath();
+        this.ctx.ellipse(x + w / 2, y + h + 2, 18, 5, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
         let bodyH, cabRad, cabY, torY, legsH;
 
         if (this.player.agachado) {
