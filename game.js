@@ -35,6 +35,18 @@ class GameController {
             hidden: false
         };
 
+        // Spritesheets (Hand-crafted Pixel Art animations)
+        if (typeof Image !== "undefined") {
+            this.sprites = {
+                nefi: new Image(),
+                nefi_laban: new Image()
+            };
+            this.sprites.nefi.src = "assets/sprites/nefi.png";
+            this.sprites.nefi_laban.src = "assets/sprites/nefi_laban.png";
+        } else {
+            this.sprites = { nefi: null, nefi_laban: null };
+        }
+
         // Environment constants
         this.gravity = 0.8;
         this.friction = 0.85;
@@ -992,6 +1004,68 @@ class GameController {
             isLabanDisguise = true;
         }
 
+        // --- SPRITESHEET RENDERING (Pixel Art 16-bit) ---
+        let img = (this.sprites && isLabanDisguise) ? this.sprites.nefi_laban : (this.sprites ? this.sprites.nefi : null);
+        if (img && img.complete && img.naturalWidth > 0) {
+            let frameW = 48;
+            let frameH = 80;
+            let rowIndex = 0;
+            let colIndex = 0;
+
+            if (this.player.inmune > 10) {
+                rowIndex = 5; // Hurt
+                colIndex = Math.floor(this.gameFrame / 6) % 2;
+            } else if (this.player.atacando) {
+                rowIndex = 4; // Attack
+                let progress = Math.max(0, 20 - this.player.ataqueCooldown);
+                colIndex = Math.min(3, Math.floor(progress / 5));
+            } else if (this.player.jumping || !this.player.grounded) {
+                rowIndex = 2; // Jump
+                if (this.player.velY < -2) colIndex = 0; // Takeoff / rising
+                else if (Math.abs(this.player.velY) <= 2) colIndex = 1; // Apex
+                else colIndex = 2; // Falling
+            } else if (this.player.agachado) {
+                rowIndex = 3; // Crouch
+                colIndex = Math.abs(this.player.velX) > 0.5 ? (Math.floor(this.player.animPaso) % 2) : 0;
+            } else if (Math.abs(this.player.velX) > 0.5) {
+                rowIndex = 1; // Run
+                colIndex = Math.floor(this.player.animPaso) % 6;
+            } else {
+                rowIndex = 0; // Idle
+                colIndex = Math.floor(this.gameFrame / 15) % 4;
+            }
+
+            let srcX = colIndex * frameW;
+            let srcY = rowIndex * frameH;
+            let destW = 48;
+            let destH = 80;
+            let destX = Math.round(x + (w - destW) / 2);
+            let destY = Math.round((y + h) - 78);
+
+            this.ctx.imageSmoothingEnabled = false;
+
+            // Stealth transparency or hit flicker
+            if (this.player.hidden) {
+                this.ctx.globalAlpha = 0.45;
+            } else if (this.player.inmune > 0 && Math.floor(this.gameFrame / 4) % 2 === 0) {
+                this.ctx.globalAlpha = 0.35;
+            }
+
+            if (this.player.direccion === "izquierda") {
+                this.ctx.save();
+                this.ctx.translate(destX + destW, destY);
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(img, srcX, srcY, frameW, frameH, 0, 0, destW, destH);
+                this.ctx.restore();
+            } else {
+                this.ctx.drawImage(img, srcX, srcY, frameW, frameH, destX, destY, destW, destH);
+            }
+
+            this.ctx.restore();
+            return;
+        }
+
+        // --- PROCEDURAL FALLBACK (If sprites are not yet loaded or unavailable) ---
         let bodyH, cabRad, cabY, torY, legsH;
 
         if (this.player.agachado) {
