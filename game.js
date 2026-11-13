@@ -1408,6 +1408,9 @@ class GameController {
         else if (charLower.includes("sam")) avatarEmoji = "🧔";
         else if (charLower.includes("lamán") || charLower.includes("laman")) avatarEmoji = "😡";
         else if (charLower.includes("lemuel")) avatarEmoji = "😤";
+        else if (charLower.includes("labán") || charLower.includes("laban")) avatarEmoji = "👑";
+        else if (charLower.includes("ángel") || charLower.includes("angel")) avatarEmoji = "👼";
+        else if (charLower.includes("espíritu") || charLower.includes("espiritu")) avatarEmoji = "🕊️";
         else if (charLower.includes("jacob")) avatarEmoji = "✍️";
         else if (charLower.includes("josé") || charLower.includes("jose")) avatarEmoji = "👦";
         else if (charLower.includes("zoram")) avatarEmoji = "🔑";
@@ -1459,37 +1462,76 @@ class GameController {
         }
         const lvl = this.currentModule.levels[this.currentLevelIndex];
         
-        // Score/Faith HUD wrapper
-        this.ctx.fillStyle = "rgba(12, 8, 31, 0.75)";
-        this.ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        this.ctx.lineWidth = 1;
-        this.ctx.fillRect(20, 20, 310, 45);
-        this.ctx.strokeRect(20, 20, 310, 45);
+        // Score/Faith HUD wrapper (Antique Dark Glass with Gold Trims)
+        let hudGrad = this.ctx.createLinearGradient(20, 20, 330, 65);
+        hudGrad.addColorStop(0, "rgba(10, 7, 24, 0.88)");
+        hudGrad.addColorStop(1, "rgba(22, 14, 45, 0.82)");
+        this.ctx.fillStyle = hudGrad;
+        this.ctx.fillRect(20, 18, 320, 48);
+        this.ctx.strokeStyle = "#ffd700";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeRect(20, 18, 320, 48);
 
+        // Gold corner accents
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.fillRect(20, 18, 6, 6);
+        this.ctx.fillRect(334, 18, 6, 6);
+        this.ctx.fillRect(20, 60, 6, 6);
+        this.ctx.fillRect(334, 60, 6, 6);
+
+        // Score display
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.font = "bold 10px Outfit";
+        this.ctx.fillText("PUNTOS", 35, 34);
         this.ctx.fillStyle = "#ffffff";
-        this.ctx.font = "bold 13px Outfit";
-        this.ctx.textAlign = "left";
-        this.ctx.fillText(`PUNTOS: ${this.score}`, 35, 47);
+        this.ctx.font = "bold 16px Outfit";
+        this.ctx.fillText(`${this.score}`, 35, 53);
 
+        // Faith Hearts
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.font = "bold 10px Outfit";
+        this.ctx.fillText("VIDA / FE", 165, 34);
         let hearts = "";
         for(let i=0; i<this.player.fe; i++) hearts += "❤️ ";
-        this.ctx.fillText(`FE: ${hearts}`, 160, 47);
+        this.ctx.font = "14px Outfit";
+        this.ctx.fillText(`${hearts}`, 165, 52);
 
-        // Persistent Objective HUD Banner
+        // Persistent Objective HUD Banner (Ornate Parchment Panel)
         if (lvl && lvl.currentObjective) {
-            this.ctx.fillStyle = "rgba(12, 8, 31, 0.85)";
-            this.ctx.strokeStyle = "rgba(255, 215, 0, 0.25)";
+            let objGrad = this.ctx.createLinearGradient(600, 18, 1004, 66);
+            objGrad.addColorStop(0, "rgba(16, 11, 35, 0.90)");
+            objGrad.addColorStop(1, "rgba(30, 20, 60, 0.85)");
+            this.ctx.fillStyle = objGrad;
+            this.ctx.fillRect(600, 18, 404, 48);
+            this.ctx.strokeStyle = "#ffd700";
             this.ctx.lineWidth = 1.5;
-            this.ctx.fillRect(630, 20, 374, 45);
-            this.ctx.strokeRect(630, 20, 374, 45);
+            this.ctx.strokeRect(600, 18, 404, 48);
 
+            // Gold corners
             this.ctx.fillStyle = "#ffd700";
-            this.ctx.font = "bold 9px Outfit";
-            this.ctx.fillText("OBJETIVO ACTIVO", 645, 34);
+            this.ctx.fillRect(600, 18, 6, 6);
+            this.ctx.fillRect(998, 18, 6, 6);
+            this.ctx.fillRect(600, 60, 6, 6);
+            this.ctx.fillRect(998, 60, 6, 6);
+
+            // Objective label
+            this.ctx.fillStyle = "#ffd700";
+            this.ctx.font = "bold 10px Outfit";
+            this.ctx.fillText("📜 OBJETIVO DE LA MISIÓN", 615, 33);
+
+            // Distance if target exists
+            if (lvl.objectiveTargetX !== undefined) {
+                let distM = Math.round(Math.abs(lvl.objectiveTargetX - this.player.x) / 10);
+                this.ctx.fillStyle = "#81d4fa";
+                this.ctx.font = "bold 10px Outfit";
+                this.ctx.textAlign = "right";
+                this.ctx.fillText(`Distancia: ${distM} m`, 990, 33);
+                this.ctx.textAlign = "left";
+            }
 
             this.ctx.fillStyle = "#ffffff";
-            this.ctx.font = "11px Outfit";
-            this.ctx.fillText(lvl.currentObjective, 645, 49);
+            this.ctx.font = "12px Outfit";
+            this.ctx.fillText(lvl.currentObjective, 615, 52);
         }
 
         // Floating Objective Guidance Arrow
@@ -1499,20 +1541,31 @@ class GameController {
             let camX = this.camaraX;
             let screenW = 1024;
             
-            let pulse = Math.sin(this.gameFrame * 0.1) * 5;
+            let pulse = Math.sin(this.gameFrame * 0.12) * 6;
+            let distM = Math.round(Math.abs(targetX - this.player.x) / 10);
             
             if (targetX > camX + screenW) {
                 // Point Right
+                this.ctx.fillStyle = "rgba(10, 7, 24, 0.85)";
+                this.ctx.strokeStyle = "#ffd700";
+                this.ctx.lineWidth = 1;
+                this.ctx.fillRect(860 - pulse, 270, 150, 32);
+                this.ctx.strokeRect(860 - pulse, 270, 150, 32);
                 this.ctx.fillStyle = "#ffd700";
                 this.ctx.font = "bold 11px Outfit";
-                this.ctx.textAlign = "right";
-                this.ctx.fillText(`${label} ➔`, 990 - pulse, 288);
+                this.ctx.textAlign = "center";
+                this.ctx.fillText(`${label} (${distM}m) ➔`, 935 - pulse, 290);
             } else if (targetX < camX) {
                 // Point Left
+                this.ctx.fillStyle = "rgba(10, 7, 24, 0.85)";
+                this.ctx.strokeStyle = "#ffd700";
+                this.ctx.lineWidth = 1;
+                this.ctx.fillRect(15 + pulse, 270, 150, 32);
+                this.ctx.strokeRect(15 + pulse, 270, 150, 32);
                 this.ctx.fillStyle = "#ffd700";
                 this.ctx.font = "bold 11px Outfit";
-                this.ctx.textAlign = "left";
-                this.ctx.fillText(`⬅ ${label}`, 35 + pulse, 288);
+                this.ctx.textAlign = "center";
+                this.ctx.fillText(`⬅ ${label} (${distM}m)`, 90 + pulse, 290);
             }
         }
 
