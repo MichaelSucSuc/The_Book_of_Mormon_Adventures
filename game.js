@@ -74,6 +74,10 @@ class GameController {
         // Notifications
         this.notification = { text: "", timer: 0 };
 
+        // Objective Guide & Fading Toast system
+        this.lastObjective = "";
+        this.objectiveToast = null;
+
         // Progress variables (All modules unlocked for testing, but saved progress can overwrite)
         this.moduleProgress = {
             1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 11: true
@@ -802,6 +806,21 @@ class GameController {
             if (this.notification.timer > 0) {
                 this.notification.timer--;
             }
+
+            // Objective Guide: Detect objective updates and trigger smooth fading toast
+            if (lvl && lvl.currentObjective && lvl.currentObjective !== this.lastObjective) {
+                this.lastObjective = lvl.currentObjective;
+                this.objectiveToast = {
+                    step: lvl.objectiveStep || lvl.currentObjective,
+                    target: lvl.objectiveTarget || lvl.objectiveTargetLabel || "Objetivo de misión",
+                    reason: lvl.objectiveReason || "Para cumplir el mandamiento del Señor y avanzar en la historia.",
+                    timer: 260,
+                    maxTimer: 260
+                };
+            }
+            if (this.objectiveToast && this.objectiveToast.timer > 0) {
+                this.objectiveToast.timer--;
+            }
         }
 
         this.render();
@@ -994,6 +1013,11 @@ class GameController {
             // Draw HUD (Score and Faith)
             if (!this.dialogueActive) {
                 this.drawHUD();
+            }
+
+            // Draw Objective Fading Toast Banner (smooth fade in/out)
+            if (!this.dialogueActive && (!lvl || !lvl.spectatorMode)) {
+                this.drawObjectiveToast();
             }
 
             // Draw Notification popups (Only if dialogue is NOT active to prevent overlapping)
@@ -1628,42 +1652,65 @@ class GameController {
         this.ctx.font = "14px Outfit";
         this.ctx.fillText(`${hearts}`, 165, 52);
 
-        // Persistent Objective HUD Banner (Ornate Parchment Panel)
+        // Persistent Objective Task Bar (Rich 3-Line Mission Panel with Target & Purpose)
         if (lvl && lvl.currentObjective) {
-            let objGrad = this.ctx.createLinearGradient(600, 18, 1004, 66);
-            objGrad.addColorStop(0, "rgba(16, 11, 35, 0.90)");
-            objGrad.addColorStop(1, "rgba(30, 20, 60, 0.85)");
+            let panelX = 490;
+            let panelY = 14;
+            let panelW = 514;
+            let panelH = 68;
+
+            let objGrad = this.ctx.createLinearGradient(panelX, panelY, panelX + panelW, panelY + panelH);
+            objGrad.addColorStop(0, "rgba(10, 7, 26, 0.93)");
+            objGrad.addColorStop(1, "rgba(25, 16, 52, 0.88)");
             this.ctx.fillStyle = objGrad;
-            this.ctx.fillRect(600, 18, 404, 48);
+            this.ctx.fillRect(panelX, panelY, panelW, panelH);
             this.ctx.strokeStyle = "#ffd700";
             this.ctx.lineWidth = 1.5;
-            this.ctx.strokeRect(600, 18, 404, 48);
+            this.ctx.strokeRect(panelX, panelY, panelW, panelH);
 
             // Gold corners
             this.ctx.fillStyle = "#ffd700";
-            this.ctx.fillRect(600, 18, 6, 6);
-            this.ctx.fillRect(998, 18, 6, 6);
-            this.ctx.fillRect(600, 60, 6, 6);
-            this.ctx.fillRect(998, 60, 6, 6);
+            this.ctx.fillRect(panelX, panelY, 5, 5);
+            this.ctx.fillRect(panelX + panelW - 5, panelY, 5, 5);
+            this.ctx.fillRect(panelX, panelY + panelH - 5, 5, 5);
+            this.ctx.fillRect(panelX + panelW - 5, panelY + panelH - 5, 5, 5);
 
-            // Objective label
+            // Header line: Label + Destination with distance & arrow
             this.ctx.fillStyle = "#ffd700";
             this.ctx.font = "bold 10px Outfit";
-            this.ctx.fillText("📜 OBJETIVO DE LA MISIÓN", 615, 33);
+            this.ctx.textAlign = "left";
+            this.ctx.fillText("📌 GUÍA DE MISIÓN", panelX + 12, panelY + 16);
 
-            // Distance if target exists
+            let targetName = lvl.objectiveTargetLabel || lvl.objectiveTarget || "";
             if (lvl.objectiveTargetX !== undefined) {
                 let distM = Math.round(Math.abs(lvl.objectiveTargetX - this.player.x) / 10);
+                let dirArrow = lvl.objectiveTargetX > this.player.x ? "➔" : "⬅";
                 this.ctx.fillStyle = "#81d4fa";
                 this.ctx.font = "bold 10px Outfit";
                 this.ctx.textAlign = "right";
-                this.ctx.fillText(`Distancia: ${distM} m`, 990, 33);
+                this.ctx.fillText(`📍 ${targetName} • ${distM} m ${dirArrow}`, panelX + panelW - 12, panelY + 16);
+                this.ctx.textAlign = "left";
+            } else if (targetName) {
+                this.ctx.fillStyle = "#81d4fa";
+                this.ctx.font = "bold 10px Outfit";
+                this.ctx.textAlign = "right";
+                this.ctx.fillText(`📍 ${targetName}`, panelX + panelW - 12, panelY + 16);
                 this.ctx.textAlign = "left";
             }
 
+            // Line 1: What to do (Next step)
             this.ctx.fillStyle = "#ffffff";
-            this.ctx.font = "12px Outfit";
-            this.ctx.fillText(lvl.currentObjective, 615, 52);
+            this.ctx.font = "bold 11px Outfit";
+            let stepText = `🎯 Paso: ${lvl.objectiveStep || lvl.currentObjective}`;
+            if (stepText.length > 68) stepText = stepText.substring(0, 66) + "...";
+            this.ctx.fillText(stepText, panelX + 12, panelY + 36);
+
+            // Line 2: Why / Purpose (Para qué / Por qué)
+            let reasonText = `💡 Motivo: ${lvl.objectiveReason || "Para cumplir el mandamiento del Señor y avanzar en la historia."}`;
+            if (reasonText.length > 82) reasonText = reasonText.substring(0, 80) + "...";
+            this.ctx.fillStyle = "#ffe082";
+            this.ctx.font = "italic 10px Outfit";
+            this.ctx.fillText(reasonText, panelX + 12, panelY + 54);
         }
 
         // Floating Objective Guidance Arrow
@@ -1731,6 +1778,84 @@ class GameController {
             this.ctx.fillText(this.notification.text, 512, 271);
         }
         
+        this.ctx.restore();
+    }
+
+    drawObjectiveToast() {
+        if (!this.objectiveToast || this.objectiveToast.timer <= 0 || this.dialogueActive) return;
+
+        let ot = this.objectiveToast;
+        let alpha = 1;
+        if (ot.timer > ot.maxTimer - 20) {
+            alpha = (ot.maxTimer - ot.timer) / 20;
+        } else if (ot.timer < 40) {
+            alpha = ot.timer / 40;
+        }
+        alpha = Math.max(0, Math.min(1, alpha));
+        if (alpha <= 0.01) return;
+
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha;
+
+        let boxW = 580;
+        let boxH = 56;
+        let boxX = (this.canvas.width - boxW) / 2;
+        let boxY = 88;
+
+        // Shadow
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        this.ctx.fillRect(boxX + 3, boxY + 3, boxW, boxH);
+
+        // Toast background gradient
+        let grad = this.ctx.createLinearGradient(boxX, boxY, boxX + boxW, boxY + boxH);
+        grad.addColorStop(0, "rgba(16, 12, 38, 0.94)");
+        grad.addColorStop(1, "rgba(28, 20, 56, 0.90)");
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(boxX, boxY, boxW, boxH);
+
+        // Glowing border
+        this.ctx.strokeStyle = "#ffd700";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // Gold corner accents
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.fillRect(boxX, boxY, 5, 5);
+        this.ctx.fillRect(boxX + boxW - 5, boxY, 5, 5);
+        this.ctx.fillRect(boxX, boxY + boxH - 5, 5, 5);
+        this.ctx.fillRect(boxX + boxW - 5, boxY + boxH - 5, 5, 5);
+
+        // Header tag
+        this.ctx.fillStyle = "#ffd700";
+        this.ctx.font = "bold 10px Outfit";
+        this.ctx.textAlign = "left";
+        this.ctx.fillText("✨ NUEVO PASO DE LA MISIÓN", boxX + 14, boxY + 18);
+
+        // Target location tag on right
+        if (ot.target) {
+            this.ctx.fillStyle = "#81d4fa";
+            this.ctx.font = "bold 10px Outfit";
+            this.ctx.textAlign = "right";
+            this.ctx.fillText(`📍 ${ot.target}`, boxX + boxW - 14, boxY + 18);
+        }
+
+        // Step description
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.font = "bold 12px Outfit";
+        this.ctx.textAlign = "left";
+        let stepText = ot.step;
+        if (stepText.length > 72) stepText = stepText.substring(0, 70) + "...";
+        this.ctx.fillText(stepText, boxX + 14, boxY + 34);
+
+        // Reason / Why
+        if (ot.reason) {
+            this.ctx.fillStyle = "#ffe082";
+            this.ctx.font = "italic 10px Outfit";
+            let reasonText = `💡 Motivo: ${ot.reason}`;
+            if (reasonText.length > 88) reasonText = reasonText.substring(0, 86) + "...";
+            this.ctx.fillText(reasonText, boxX + 14, boxY + 48);
+        }
+
         this.ctx.restore();
     }
 }

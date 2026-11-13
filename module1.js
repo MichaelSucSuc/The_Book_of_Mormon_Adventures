@@ -1093,9 +1093,12 @@ const module1 = {
                 this.checkpoint = { x: 2800, y: 415 };
                 this.cameraTargetX = undefined;
 
-                this.currentObjective = "Presencia el primer intento: Lamán entra al palacio de Labán tras echar suertes";
+                this.currentObjective = "Presencia el primer intento: Lamán entra al palacio de Labán";
+                this.objectiveStep = "Presencia el primer intento de Lamán";
+                this.objectiveTarget = "Palacio de Labán (x = 750)";
                 this.objectiveTargetX = 750;
                 this.objectiveTargetLabel = "Palacio de Labán";
+                this.objectiveReason = "Para demandar pacíficamente las Planchas de Bronce según la suerte echada (1 Nefi 3:11).";
 
                 // Phase states:
                 // 0: First attempt cutscene (Laman runs to Laban, gets threatened, runs back to Nephi)
@@ -1322,9 +1325,12 @@ const module1 = {
                         this.cutscenePursuers = [];
                         this.cameraTargetX = undefined;
                         this.currentPhase = 1;
-                        this.currentObjective = "Entra a Jerusalén y recoge las 3 riquezas en la Casa de Lehí (x = 1850)";
+                        this.currentObjective = "Entra a Jerusalén y recoge las 3 riquezas en la Casa de Lehí";
+                        this.objectiveStep = "Recoge las 3 riquezas familiares";
+                        this.objectiveTarget = "Casa de Lehí (x = 1850)";
                         this.objectiveTargetX = 1850;
                         this.objectiveTargetLabel = "Casa de Lehí";
+                        this.objectiveReason = "Para comprar las Planchas de Bronce a Labán ofreciéndole nuestro oro y plata (1 Nefi 3:24).";
                         this.checkpoint = { x: 2800, y: 415 };
 
                         // All brothers now follow Nephi
@@ -1367,8 +1373,11 @@ const module1 = {
                         this.phase1DialoguePlayed = true;
                         this.currentPhase = 2;
                         this.currentObjective = "Lleva las riquezas familiares al Palacio de Labán (x = 850)";
+                        this.objectiveStep = "Ofrece el tesoro familiar en el palacio de Labán";
+                        this.objectiveTarget = "Palacio de Labán (x = 850)";
                         this.objectiveTargetX = 850;
                         this.objectiveTargetLabel = "Palacio de Labán";
+                        this.objectiveReason = "Para entregar nuestro oro a cambio de los sagrados anales genealógicos (1 Nefi 3:24).";
                         this.checkpoint = { x: 1850, y: 415 };
                         game.dialogueQueue = [
                             { char: "Nefi", text: "¡Hemos reunido todo nuestro oro, plata y bienes preciosos! Marchemos al palacio de Labán para ofrecérselos a cambio de las Planchas de Bronce." }
@@ -1393,9 +1402,12 @@ const module1 = {
                         this.escapePhaseStarted = true;
                         this.alarmActive = true;
                         this.alarmTimer = 0;
-                        this.currentObjective = "¡HUYE! Escapa de los soldados de Labán hasta la cavidad de la roca en el desierto (x = 3400)";
+                        this.currentObjective = "¡HUYE! Escapa de los soldados de Labán hasta la cavidad de la roca (x = 3400)";
+                        this.objectiveStep = "¡Huye de los soldados de Labán hacia el desierto!";
+                        this.objectiveTarget = "Cavidad de la Roca en el Desierto (x = 3400)";
                         this.objectiveTargetX = 3400;
                         this.objectiveTargetLabel = "Cavidad de la Roca";
+                        this.objectiveReason = "Labán codició el oro y mandó soldados a matarnos; debemos refugiarnos (1 Nefi 3:25-27).";
 
                         this.enemies = [
                             { x: 500, y: 420, type: "guard_normal", hp: 1, range: 4000, startX: 500, dir: 1, width: 50, height: 80, speed: 3.6, state: "chase" },
@@ -1420,9 +1432,12 @@ const module1 = {
                             this.currentPhase = 3;
                             this.enemies = [];
                             this.alarmActive = false;
-                            this.currentObjective = "Presencia la intervención del Ángel del Señor.";
-                            this.objectiveTargetX = undefined;
-                            this.objectiveTargetLabel = "";
+                            this.currentObjective = "Presencia la intervención del Ángel del Señor en la cavidad";
+                            this.objectiveStep = "Detén la contienda y atiende al Ángel del Señor";
+                            this.objectiveTarget = "Cavidad de la Roca (x = 3400)";
+                            this.objectiveTargetX = 3400;
+                            this.objectiveTargetLabel = "Ángel del Señor";
+                            this.objectiveReason = "Lamán y Lemuel murmuran y golpean con una vara; un mensajero divino trae un mandato (1 Nefi 3:28-30).";
                             this.beatingActive = true;
                             this.beatingTimer = 0;
                             game.player.velX = 0;
@@ -1470,8 +1485,11 @@ const module1 = {
                     if (this.phase3EndDialogueTriggered && !game.dialogueActive) {
                         this.currentPhase = 4;
                         this.currentObjective = "Infíltrate en Jerusalén de noche y busca a Labán (x = 880)";
+                        this.objectiveStep = "Infiltración nocturna en Jerusalén guiado por el Espíritu";
+                        this.objectiveTarget = "Calles de Jerusalén (x = 880)";
                         this.objectiveTargetX = 880;
                         this.objectiveTargetLabel = "Labán ebrio";
+                        this.objectiveReason = "Iba guiado por el Espíritu Santo sin saber de antemano lo que tendría que hacer (1 Nefi 4:5-6).";
                         this.checkpoint = { x: 2800, y: 415 };
                         this.family = []; // Nefi enters alone into the city!
                         game.showNotification("🌙 Infiltración nocturna: Avanza solo y usa las sombras (▼) para evadir las patrullas.");
@@ -1513,8 +1531,11 @@ const module1 = {
                     if (this.phase4DialogueTriggered && !game.dialogueActive) {
                         this.currentPhase = 5;
                         this.currentObjective = "Examina la Espada de Labán y cumple la voz del Espíritu (Presiona X o acércate)";
+                        this.objectiveStep = "Examina la espada y toma la armadura de Labán";
+                        this.objectiveTarget = "Cuerpo de Labán (x = 880)";
                         this.objectiveTargetX = 880;
                         this.objectiveTargetLabel = "Espada de Labán";
+                        this.objectiveReason = "El Señor lo entregó para preservar las escrituras; usa su armadura como disfraz (1 Nefi 4:10-19).";
                     }
                 }
 
@@ -1540,8 +1561,11 @@ const module1 = {
                         this.laban.state = "dead";
                         window.gameAudio.playPowerUp();
                         this.currentObjective = "Ve a la tesorería de Labán (x = 450) y habla con su siervo Zoram";
+                        this.objectiveStep = "Entra a la tesorería de Labán y habla con Zoram";
+                        this.objectiveTarget = "Tesorería de Labán (x = 450)";
                         this.objectiveTargetX = 450;
                         this.objectiveTargetLabel = "Zoram en la Tesorería";
+                        this.objectiveReason = "Hacerse pasar por Labán para que Zoram abra el portón y entregue las Planchas (1 Nefi 4:20-24).";
                         this.enemies = []; // Guards won't attack Laban!
                         this.checkpoint = { x: 800, y: 415 };
                         game.showNotification("🛡️ ¡Disfraz de Labán equipado! Los soldados te respetarán. Dirígete a la tesorería.");
@@ -1569,8 +1593,11 @@ const module1 = {
                             gate.height = 0; // Gate opens!
                         }
                         this.currentObjective = "Entra a la bóveda y recoge las Planchas de Bronce (x = 150)";
+                        this.objectiveStep = "Toma las Planchas de Bronce del pedestal";
+                        this.objectiveTarget = "Pedestal del Tesoro (x = 150)";
                         this.objectiveTargetX = 150;
                         this.objectiveTargetLabel = "Planchas de Bronce";
+                        this.objectiveReason = "Obtener los sagrados anales de la ley de Moisés y la genealogía familiar (1 Nefi 4:24).";
                     }
 
                     // Collect the Plates of Brass
@@ -1581,9 +1608,12 @@ const module1 = {
                         game.showNotification("📖 ¡Planchas de Bronce obtenidas! Sagrados anales en tu poder (+250 PTS).");
 
                         this.currentPhase = 7;
-                        this.currentObjective = "Sal de Jerusalén con Zoram y reúnete con tus hermanos fuera de los muros (x = 3100)";
+                        this.currentObjective = "Sal de Jerusalén con Zoram y reúnete con tus hermanos (x = 3100)";
+                        this.objectiveStep = "Reúnete con los hermanos y pacta juramento con Zoram";
+                        this.objectiveTarget = "Afueras de los Muros (x = 3100)";
                         this.objectiveTargetX = 3100;
-                        this.objectiveTargetLabel = "Afueras de la Ciudad";
+                        this.objectiveTargetLabel = "Punto de Reunión";
+                        this.objectiveReason = "Zoram temió ser engañado; dale solemne juramento de libertad y hermandad (1 Nefi 4:31-35).";
 
                         // Zoram follows Nephi
                         this.family = [
@@ -1623,8 +1653,11 @@ const module1 = {
                     if (this.oathDialogueTriggered && !game.dialogueActive) {
                         this.currentPhase = 8; // Final climax: Journey back to the far wilderness camp!
                         this.currentObjective = "Avanza por el desierto hasta la tienda lejana de Lehí y Saríah (x = 3850)";
+                        this.objectiveStep = "Regresa al campamento del Valle de Lemuel con los anales";
+                        this.objectiveTarget = "Tienda de Lehí en el Desierto (x = 3850)";
                         this.objectiveTargetX = 3850;
-                        this.objectiveTargetLabel = "Tienda de Lehí en el Desierto";
+                        this.objectiveTargetLabel = "Tienda de Lehí y Saríah";
+                        this.objectiveReason = "Entregar las Planchas a nuestros padres para su consuelo, gozo y gratitud (1 Nefi 5:1-7).";
 
                         // Brothers and Zoram join the joyful march
                         this.family = [
