@@ -1,4 +1,341 @@
 // Module 1: 1 Nephi - The Faithful Family
+
+// ==========================================
+// AUTONOMOUS FLOCKING & INDEPENDENT PHYSICS FOR FOLLOWERS
+// (Desynchronized, organic movement & independent jumping)
+// ==========================================
+function updateAutonomousFollowers(game, family, platforms, gameFrame) {
+    if (!family || family.length === 0 || !game || !game.player) return;
+    const leader = game.player;
+    const leaderX = leader.x;
+    const leaderY = leader.y;
+    const leaderW = leader.width || 40;
+    const leaderH = leader.height || 85;
+    const leaderDir = (leader.direccion === 'izquierda' || leader.velX < -0.3) ? -1 : 1;
+    const isLeaderCrouching = !!(leader.agachado || leader.hidden);
+
+    family.forEach((member, i) => {
+        // Initialize independent state if missing
+        if (member.x === undefined) member.x = leaderX - (30 + i * 35);
+        if (member.y === undefined) member.y = leaderY;
+        member.width = member.width || 36;
+        member.height = member.height || 88;
+        if (member.velX === undefined) member.velX = 0;
+        if (member.velY === undefined) member.velY = 0;
+        if (member.grounded === undefined) member.grounded = true;
+        if (member.jumping === undefined) member.jumping = false;
+        if (member.jumpCooldown === undefined) member.jumpCooldown = 0;
+        if (member.facing === undefined) member.facing = leaderDir;
+        if (member.crouchTimer === undefined) member.crouchTimer = 0;
+        if (member.animOffset === undefined) member.animOffset = i * 23 + 11;
+
+        // Personality spacing behind leader or preceding member
+        // Lamán is reluctant and lags behind, Lemuel stays close to Lamán, Sam stays attentive
+        const extraSlack = (member.name === "Lamán") ? 18 : (member.name === "Lemuel" ? 8 : 0);
+        const personalSpacing = 42 + (i * 35) + extraSlack;
+
+        // Target side calculation: followers trail behind leader's movement direction
+        let targetSide = -leaderDir;
+        if (Math.abs(leader.velX) < 0.2) {
+            // When leader is idle, maintain member's current side to prevent nervous shuffling
+            targetSide = (member.x < leaderX) ? -1 : 1;
+        }
+        const targetX = (targetSide < 0)
+            ? (leaderX - personalSpacing)
+            : (leaderX + leaderW + personalSpacing - member.width);
+
+        const dx = targetX - member.x;
+        const dist = Math.abs(dx);
+        const stopMargin = 12 + (i * 4);
+
+        // Horizontal locomotion
+        if (dist > stopMargin) {
+            const moveDir = Math.sign(dx);
+            member.facing = moveDir;
+
+            // Speed variation: sprint if far behind, normal jog otherwise
+            let maxSpeed = 3.2 + (i % 2) * 0.3;
+            if (dist > 140) maxSpeed = 5.0;
+            if (dist > 280) maxSpeed = 6.8;
+
+            const accel = 0.38 + (i % 3) * 0.08;
+            member.velX += moveDir * accel;
+            if (member.velX > maxSpeed) member.velX = maxSpeed;
+            if (member.velX < -maxSpeed) member.velX = -maxSpeed;
+        } else {
+            // Gentle deceleration into idle
+            member.velX *= 0.62;
+            if (Math.abs(member.velX) < 0.1) member.velX = 0;
+            // Face leader when standing nearby
+            if (Math.abs(leaderX - member.x) > 20) {
+                member.facing = leaderX > member.x ? 1 : -1;
+            }
+        }
+
+        // Autonomous Crouching with organic individual reaction delay
+        const reactionDelay = 8 + i * 9;
+        if (isLeaderCrouching) {
+            member.crouchTimer = (member.crouchTimer || 0) + 1;
+            if (member.crouchTimer >= reactionDelay) {
+                member.agachado = true;
+            }
+        } else {
+            member.crouchTimer = Math.max(0, (member.crouchTimer || 0) - 2);
+            if (member.crouchTimer < reactionDelay) {
+                member.agachado = false;
+            }
+        }
+
+        // Autonomous Jumping Logic (Decoupled from leader)
+        if (member.jumpCooldown > 0) member.jumpCooldown--;
+
+        if (member.grounded && member.jumpCooldown <= 0) {
+            // Check A: Leader is elevated on a platform above
+            const leaderElevated = (leaderY < member.y - 25);
+            const closeEnoughToLedge = (Math.abs(leaderX - member.x) < 220);
+            if (leaderElevated && closeEnoughToLedge) {
+                member.velY = -11.5 - ((i % 3) * 0.4);
+                member.jumping = true;
+                member.grounded = false;
+                member.jumpCooldown = 28 + (i * 6); // Desynchronized jump timing
+            }
+
+            // Check B: Obstacle / Wall / Platform ledge directly ahead
+            if (!member.jumping && Math.abs(member.velX) > 0.4 && platforms) {
+                let obstacleAhead = false;
+                platforms.forEach(plat => {
+                    if (plat.height <= 0) return;
+                    if (plat.tipo === "bloque" || plat.tipo === "muro" || plat.tipo === "plataforma") {
+                        const inFront = (member.facing > 0)
+                            ? (plat.x >= member.x && plat.x <= member.x + member.width + 25)
+                            : (plat.x + plat.width >= member.x - 25 && plat.x + plat.width <= member.x);
+                        const atFootLevel = (plat.y < member.y + member.height && plat.y + plat.height > member.y + 15);
+                        if (inFront && atFootLevel && plat.y < member.y + member.height - 6) {
+                            obstacleAhead = true;
+                        }
+                    }
+                });
+                if (obstacleAhead) {
+                    member.velY = -11.2 - ((i % 2) * 0.5);
+                    member.jumping = true;
+                    member.grounded = false;
+                    member.jumpCooldown = 32;
+                }
+            }
+
+            // Check C: Gap / Floor drop ahead while following
+            if (!member.jumping && Math.abs(member.velX) > 1.2 && dist > 50 && platforms) {
+                const testX = member.x + member.facing * 30;
+                let groundAhead = false;
+                platforms.forEach(plat => {
+                    if (testX >= plat.x && testX <= plat.x + plat.width && Math.abs((member.y + member.height) - plat.y) < 22) {
+                        groundAhead = true;
+                    }
+                });
+                if (!groundAhead) {
+                    member.velY = -10.8;
+                    member.jumping = true;
+                    member.grounded = false;
+                    member.jumpCooldown = 30;
+                }
+            }
+        }
+
+        // Apply Gravity & Physics
+        member.velY = (member.velY || 0) + 0.65;
+        if (member.velY > 14) member.velY = 14;
+
+        member.x += member.velX;
+        member.y += member.velY;
+
+        // Resolve platform collisions
+        const effH = member.agachado ? member.height * 0.55 : member.height;
+        member.grounded = false;
+
+        if (platforms) {
+            platforms.forEach(plat => {
+                if (plat.height <= 0) return;
+                // Floor landing
+                if (member.x + member.width - 8 > plat.x && member.x + 8 < plat.x + plat.width &&
+                    member.y + effH >= plat.y && member.y + effH - member.velY <= plat.y + 16) {
+                    member.y = plat.y - effH;
+                    member.velY = 0;
+                    member.jumping = false;
+                    member.grounded = true;
+                }
+                // Solid walls
+                if (plat.tipo === "bloque" || plat.tipo === "muro" || plat.tipo === "puerta_cerrada") {
+                    if (member.x + member.width > plat.x && member.x < plat.x + plat.width &&
+                        member.y + effH > plat.y + 10 && member.y < plat.y + plat.height) {
+                        if (member.velX > 0) { member.x = plat.x - member.width; member.velX = 0; }
+                        if (member.velX < 0) { member.x = plat.x + plat.width; member.velX = 0; }
+                    }
+                }
+            });
+        }
+
+        // Robust Anti-Stuck Safeguard
+        if (Math.abs(member.x - leaderX) > 850 || member.y > 650) {
+            member.x = leaderX - (leaderDir * (35 + i * 28));
+            member.y = leaderY;
+            member.velX = 0;
+            member.velY = 0;
+            member.grounded = true;
+            member.jumping = false;
+        }
+    });
+}
+
+// ==========================================
+// AUTONOMOUS INTELLIGENT JUMPING GUARD AI
+// (Pursues player onto elevated platforms, vaults obstacles)
+// ==========================================
+function updateGuardsAI(game, enemies, platforms, options) {
+    if (!enemies || enemies.length === 0 || !game || !game.player) return;
+    const player = game.player;
+
+    enemies.forEach((e, idx) => {
+        if (e.hp <= 0) {
+            if (e.state !== "dead") {
+                e.state = "dead";
+                game.score += (e.type === "soldier" ? 60 : 30);
+            }
+            return;
+        }
+
+        e.width = e.width || 50;
+        e.height = e.height || 80;
+        if (e.velX === undefined) e.velX = 0;
+        if (e.velY === undefined) e.velY = 0;
+        if (e.grounded === undefined) e.grounded = true;
+        if (e.jumping === undefined) e.jumping = false;
+        if (e.jumpCooldown === undefined) e.jumpCooldown = 0;
+        if (e.jumpCooldown > 0) e.jumpCooldown--;
+
+        if (e.state === "chase") {
+            // Face and accelerate toward player
+            e.dir = (player.x > e.x) ? 1 : -1;
+            e.velX = e.speed * e.dir;
+
+            // Intelligent Jump Decisions
+            if (e.grounded && e.jumpCooldown <= 0) {
+                // Decision 1: Player is on an elevated platform/roof
+                const playerHigher = (player.y < e.y - 25);
+                const inJumpReach = (Math.abs(player.x - e.x) < 230);
+                if (playerHigher && inJumpReach) {
+                    e.velY = -12.4 - (Math.random() * 1.0); // Athletic chase leap
+                    e.jumping = true;
+                    e.grounded = false;
+                    e.jumpCooldown = 35 + (idx * 8) + Math.floor(Math.random() * 15);
+                }
+
+                // Decision 2: Obstacle, step, crate or wall directly in front
+                if (!e.jumping && platforms) {
+                    let obstacleAhead = false;
+                    platforms.forEach(plat => {
+                        if (plat.height <= 0) return;
+                        if (plat.tipo === "bloque" || plat.tipo === "muro" || plat.tipo === "plataforma") {
+                            const inFront = (e.dir > 0)
+                                ? (plat.x >= e.x && plat.x <= e.x + e.width + 25)
+                                : (plat.x + plat.width >= e.x - 25 && plat.x + plat.width <= e.x);
+                            const atFootLevel = (plat.y < e.y + e.height && plat.y + plat.height > e.y + 15);
+                            if (inFront && atFootLevel && plat.y < e.y + e.height - 8) {
+                                obstacleAhead = true;
+                            }
+                        }
+                    });
+                    if (obstacleAhead) {
+                        e.velY = -11.6;
+                        e.jumping = true;
+                        e.grounded = false;
+                        e.jumpCooldown = 32;
+                    }
+                }
+            }
+
+            // Damage player if collides
+            if (player.inmune === 0 && game.collides(player, e)) {
+                game.playerHurt();
+            }
+        } else if (e.state === "patrol") {
+            // Patrol within range
+            e.velX = e.speed * e.dir;
+            if (Math.abs(e.x - e.startX) > e.range) {
+                e.dir *= -1;
+            }
+
+            // Jump over low steps on patrol route
+            if (e.grounded && e.jumpCooldown <= 0 && platforms) {
+                let lowStep = false;
+                platforms.forEach(plat => {
+                    if (plat.height <= 0) return;
+                    const inFront = (e.dir > 0)
+                        ? (plat.x >= e.x && plat.x <= e.x + e.width + 18)
+                        : (plat.x + plat.width >= e.x - 18 && plat.x + plat.width <= e.x);
+                    if (inFront && plat.y < e.y + e.height && plat.y >= e.y + e.height - 35) {
+                        lowStep = true;
+                    }
+                });
+                if (lowStep) {
+                    e.velY = -9.2;
+                    e.jumping = true;
+                    e.grounded = false;
+                    e.jumpCooldown = 35;
+                }
+            }
+
+            // Collide with player if not hidden
+            const canDetect = options && options.stealth ? !player.hidden : true;
+            if (canDetect && player.inmune === 0 && game.collides(player, e)) {
+                game.playerHurt();
+            }
+
+            // Level 1: Check family collisions
+            if (options && options.checkFamily && options.family) {
+                options.family.forEach(member => {
+                    if (member.healthy && game.collides(member, e)) {
+                        member.healthy = false;
+                        game.score = Math.max(0, game.score - 40);
+                        if (window.gameAudio && window.gameAudio.playHurt) window.gameAudio.playHurt();
+                        game.showNotification("¡Un miembro de la familia fue hostigado! Protege a los tuyos.");
+                    }
+                });
+            }
+        }
+
+        // Apply Gravity
+        e.velY = (e.velY || 0) + 0.65;
+        if (e.velY > 15) e.velY = 15;
+
+        e.x += e.velX;
+        e.y += e.velY;
+
+        // Resolve platform collisions
+        e.grounded = false;
+        if (platforms) {
+            platforms.forEach(plat => {
+                if (plat.height <= 0) return;
+                // Floor landing
+                if (e.x + e.width - 10 > plat.x && e.x + 10 < plat.x + plat.width &&
+                    e.y + e.height >= plat.y && e.y + e.height - e.velY <= plat.y + 16) {
+                    e.y = plat.y - e.height;
+                    e.velY = 0;
+                    e.jumping = false;
+                    e.grounded = true;
+                }
+                // Solid walls
+                if (plat.tipo === "bloque" || plat.tipo === "muro" || plat.tipo === "puerta_cerrada") {
+                    if (e.x + e.width > plat.x && e.x < plat.x + plat.width &&
+                        e.y + e.height > plat.y + 10 && e.y < plat.y + plat.height) {
+                        if (e.velX > 0) { e.x = plat.x - e.width; e.velX = 0; if (e.state === "patrol") e.dir = -1; }
+                        if (e.velX < 0) { e.x = plat.x + plat.width; e.velX = 0; if (e.state === "patrol") e.dir = 1; }
+                    }
+                }
+            });
+        }
+    });
+}
+
 const module1 = {
     id: 1,
     name: "1 Nefi - La familia fiel",
@@ -174,7 +511,7 @@ const module1 = {
             },
 
             update: function(game, gameFrame, input) {
-                // Record history for family snake following
+                // Record history buffer for backward compatibility
                 this.positionHistory.unshift({
                     x: game.player.x,
                     y: game.player.y,
@@ -185,15 +522,8 @@ const module1 = {
                     this.positionHistory.pop();
                 }
 
-                // Update family positions
-                this.family.forEach(member => {
-                    const posIndex = member.offset;
-                    const histPos = this.positionHistory[posIndex] || this.positionHistory[this.positionHistory.length - 1];
-                    member.x = histPos.x;
-                    member.y = histPos.y;
-                    member.agachado = histPos.agachado;
-                    member.jumping = histPos.jumping;
-                });
+                // Update family with autonomous desynchronized flocking physics & jumping
+                updateAutonomousFollowers(game, this.family, this.platforms, gameFrame);
 
                 // Dialogue Trigger 1: Murmuring of Laman and Lemuel by the Red Sea (1 Nefi 2:11-14)
                 if (!this.sariahDialogueTriggered && game.player.x > 1700 && game.player.grounded && Math.abs(game.player.velX) < 2) {
@@ -281,39 +611,8 @@ const module1 = {
                     }
                 }
 
-                // Update enemies
-                this.enemies.forEach(e => {
-                    if (e.hp <= 0) {
-                        if (e.state !== "dead") {
-                            e.state = "dead";
-                            game.score += e.type === "soldier" ? 60 : 30;
-                        }
-                        return;
-                    }
-
-                    // Patrol logic
-                    if (e.state === "patrol") {
-                        e.x += e.speed * e.dir;
-                        if (Math.abs(e.x - e.startX) > e.range) {
-                            e.dir *= -1;
-                        }
-
-                        // Touch player
-                        if (game.player.inmune === 0 && game.collides(game.player, e)) {
-                            game.playerHurt();
-                        }
-
-                        // Check family collisions
-                        this.family.forEach(member => {
-                            if (member.healthy && game.collides(member, e)) {
-                                member.healthy = false;
-                                game.score = Math.max(0, game.score - 40);
-                                window.gameAudio.playHurt();
-                                game.showNotification("¡Un miembro de la familia fue hostigado! Protege a los tuyos.");
-                            }
-                        });
-                    }
-                });
+                // Update enemies with jumping AI and platform physics
+                updateGuardsAI(game, this.enemies, this.platforms, { checkFamily: true, family: this.family });
 
                 // Dynamic Checkpoint updates
                 if (game.player.x > 1650 && this.checkpoint.x < 1600 && game.player.grounded) {
@@ -336,9 +635,13 @@ const module1 = {
                     for (let i = 0; i < 400; i++) {
                         this.positionHistory.push({ x: this.checkpoint.x, y: this.checkpoint.y, agachado: false, jumping: false });
                     }
-                    this.family.forEach(member => {
-                        member.x = this.checkpoint.x;
+                    this.family.forEach((member, idx) => {
+                        member.x = this.checkpoint.x - (25 + idx * 28);
                         member.y = this.checkpoint.y;
+                        member.velX = 0;
+                        member.velY = 0;
+                        member.grounded = true;
+                        member.jumping = false;
                     });
                 }
 
@@ -825,13 +1128,16 @@ const module1 = {
                 ctx.translate(-camaraX, 0);
                 this.family.forEach(member => {
                     ctx.save();
+                    let isMoving = Math.abs(member.velX || 0) > 0.2;
+                    let breath = (!isMoving && member.grounded) ? Math.sin((gameFrame + (member.animOffset || 0)) * 0.08) * 1.5 : 0;
                     let fH = member.agachado ? member.height * 0.55 : member.height;
-                    let fY = member.y;
+                    let fY = member.y + breath;
 
                     // Shadow under feet
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                    let shadowAlpha = member.grounded ? 0.25 : 0.12;
+                    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
                     ctx.beginPath();
-                    ctx.ellipse(member.x + 20, fY + fH - 2, 12, 4, 0, 0, Math.PI * 2);
+                    ctx.ellipse(member.x + 20, member.y + fH - 2, 12, 4, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Body robe
@@ -878,44 +1184,48 @@ const module1 = {
                     }
 
                     // Skin Head
+                    let headDirX = (member.facing > 0) ? 1 : -1;
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
-                    ctx.arc(member.x + 20, fY + 12, 9, 0, Math.PI * 2);
+                    ctx.arc(member.x + 20 + headDirX, fY + 12, 9, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Hair/beard
                     if (member.name !== "Saríah") {
                         ctx.fillStyle = member.name === "Sam" ? "#5d4037" : "#1a0d00";
-                        ctx.fillRect(member.x + 11, fY + 3, 18, 3);
+                        ctx.fillRect(member.x + 11 + headDirX, fY + 3, 18, 3);
                         ctx.beginPath();
-                        ctx.moveTo(member.x + 12, fY + 14);
-                        ctx.quadraticCurveTo(member.x + 20, fY + 22, member.x + 28, fY + 14);
+                        ctx.moveTo(member.x + 12 + headDirX, fY + 14);
+                        if (ctx.quadraticCurveTo) {
+                            ctx.quadraticCurveTo(member.x + 20 + headDirX, fY + 22, member.x + 28 + headDirX, fY + 14);
+                        } else {
+                            ctx.lineTo(member.x + 28 + headDirX, fY + 14);
+                        }
                         ctx.fill();
                     }
 
                     // Eyes
                     ctx.fillStyle = "#ffffff";
-                    ctx.fillRect(member.x + 15, fY + 8, 4, 3);
-                    ctx.fillRect(member.x + 21, fY + 8, 4, 3);
+                    let eyeBase = member.x + 20 + (member.facing > 0 ? 2 : -6);
+                    ctx.fillRect(eyeBase, fY + 8, 4, 3);
                     ctx.fillStyle = "#000000";
-                    ctx.fillRect(member.x + 16, fY + 9, 1.5, 1.5);
-                    ctx.fillRect(member.x + 22, fY + 9, 1.5, 1.5);
+                    ctx.fillRect(eyeBase + (member.facing > 0 ? 2 : 0), fY + 9, 1.5, 1.5);
 
-                    // Walking legs
+                    // Legs
                     ctx.lineWidth = 3;
                     ctx.strokeStyle = "#ffdbac";
-                    let walkStep = Math.sin(gameFrame * 0.15 + member.offset * 0.25) * 8;
-                    if (member.jumping) {
+                    if (member.jumping || !member.grounded) {
                         ctx.beginPath();
                         ctx.moveTo(member.x + 14, fY + fH - 8);
-                        ctx.lineTo(member.x + 14, fY + fH - 2);
+                        ctx.lineTo(member.x + 12, fY + fH - 2);
                         ctx.moveTo(member.x + 26, fY + fH - 8);
-                        ctx.lineTo(member.x + 26, fY + fH - 2);
+                        ctx.lineTo(member.x + 28, fY + fH - 4);
                         ctx.stroke();
                     } else if (member.agachado) {
                         ctx.fillStyle = "#ffdbac";
                         ctx.fillRect(member.x + 10, fY + fH - 4, 20, 4);
-                    } else {
+                    } else if (isMoving) {
+                        let walkStep = Math.sin(gameFrame * 0.22 + (member.animOffset || 0)) * 7;
                         ctx.beginPath();
                         ctx.moveTo(member.x + 14, fY + fH - 8);
                         ctx.lineTo(member.x + 14 + walkStep, fY + fH);
@@ -925,6 +1235,16 @@ const module1 = {
                         ctx.fillStyle = "#3e2723";
                         ctx.fillRect(member.x + 11 + walkStep, fY + fH - 2, 6, 3);
                         ctx.fillRect(member.x + 23 - walkStep, fY + fH - 2, 6, 3);
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(member.x + 14, fY + fH - 8);
+                        ctx.lineTo(member.x + 14, fY + fH);
+                        ctx.moveTo(member.x + 26, fY + fH - 8);
+                        ctx.lineTo(member.x + 26, fY + fH);
+                        ctx.stroke();
+                        ctx.fillStyle = "#3e2723";
+                        ctx.fillRect(member.x + 11, fY + fH - 2, 6, 3);
+                        ctx.fillRect(member.x + 23, fY + fH - 2, 6, 3);
                     }
 
                     // Name Tag
@@ -1228,7 +1548,7 @@ const module1 = {
                     }
                 }
 
-                // Record history for followers (Phases 1, 2, 7, 8)
+                // Update followers (Phases 1, 2, 7, 8) with autonomous flocking physics & jumping
                 if (this.currentPhase === 1 || this.currentPhase === 2 || this.currentPhase === 7 || this.currentPhase === 8) {
                     this.positionHistory.unshift({
                         x: game.player.x,
@@ -1240,15 +1560,8 @@ const module1 = {
                         this.positionHistory.pop();
                     }
 
-                    // Update followers coordinates
-                    this.family.forEach(member => {
-                        const posIndex = member.offset;
-                        const histPos = this.positionHistory[posIndex] || this.positionHistory[this.positionHistory.length - 1];
-                        member.x = histPos.x;
-                        member.y = histPos.y;
-                        member.agachado = histPos.agachado;
-                        member.jumping = histPos.jumping;
-                    });
+                    // Autonomous flocking & decoupled jumping
+                    updateAutonomousFollowers(game, this.family, this.platforms, gameFrame);
                 }
 
                 // Phase 0: Cinematic First Attempt (Lamán runs to Laban, gets threatened, runs back scared)
@@ -1418,14 +1731,8 @@ const module1 = {
                     }
 
                     if (this.escapePhaseStarted) {
-                        this.enemies.forEach(e => {
-                            if (e.hp <= 0) return;
-                            e.dir = game.player.x > e.x ? 1 : -1;
-                            e.x += e.speed * e.dir;
-                            if (game.player.inmune === 0 && game.collides(game.player, e)) {
-                                game.playerHurt();
-                            }
-                        });
+                        // Guards chase Nefi with athletic jumping AI, vaulting obstacles & platforms
+                        updateGuardsAI(game, this.enemies, this.platforms);
 
                         // Reached desert rock cavity
                         if (game.player.x >= 3350) {
@@ -1509,13 +1816,8 @@ const module1 = {
                     }
 
                     // Patrol guards
-                    this.enemies.forEach(e => {
-                        e.x += e.speed * e.dir;
-                        if (Math.abs(e.x - e.startX) > e.range) e.dir *= -1;
-                        if (!game.player.hidden && game.player.inmune === 0 && game.collides(game.player, e)) {
-                            game.playerHurt();
-                        }
-                    });
+                    // Patrol guards with autonomous obstacle hopping & stealth detection
+                    updateGuardsAI(game, this.enemies, this.platforms, { stealth: true });
 
                     // Reach Labán drunken body
                     if (game.player.x <= 960 && !this.phase4DialogueTriggered) {
@@ -1703,6 +2005,14 @@ const module1 = {
                         game.player.y = this.checkpoint.y;
                         game.player.velX = 0;
                         game.player.velY = 0;
+                        this.family.forEach((m, idx) => {
+                            m.x = this.checkpoint.x - (30 + idx * 30);
+                            m.y = this.checkpoint.y;
+                            m.velX = 0;
+                            m.velY = 0;
+                            m.grounded = true;
+                            m.jumping = false;
+                        });
                         this.positionHistory = [];
                         for (let i = 0; i < 400; i++) {
                             this.positionHistory.push({ x: this.checkpoint.x, y: this.checkpoint.y, agachado: false, jumping: false });
@@ -2557,58 +2867,132 @@ const module1 = {
                     ctx.fillText("¡Lamán golpeando con una vara!", bx + 20, by - 35);
                 }
 
-                // Draw Followers (Family & Zoram)
+                // Draw Followers (Family & Zoram) with independent animations
                 this.family.forEach(member => {
                     ctx.save();
+                    let isMoving = Math.abs(member.velX || 0) > 0.2;
+                    let breath = (!isMoving && member.grounded) ? Math.sin((gameFrame + (member.animOffset || 0)) * 0.08) * 1.5 : 0;
                     let fH = member.agachado ? member.height * 0.55 : member.height;
-                    let fY = member.y;
+                    let fY = member.y + breath;
 
-                    // Ground shadow
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+                    // Ground shadow with depth
+                    let shadowAlpha = member.grounded ? 0.35 : 0.15;
+                    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
                     ctx.beginPath();
-                    ctx.ellipse(member.x + 20, fY + fH, 16, 4, 0, 0, Math.PI * 2);
+                    ctx.ellipse(member.x + 20, member.y + fH, 16, 4, 0, 0, Math.PI * 2);
                     ctx.fill();
 
                     // Robe
                     ctx.fillStyle = member.healthy ? member.color : "#d32f2f";
                     ctx.fillRect(member.x + 10, fY + 20, 20, fH - 28);
 
+                    // Belt / Accessories
+                    ctx.fillStyle = member.name === "Zoram" ? "#37474f" : (member.name === "Sam" ? "#5d4037" : "#212121");
+                    ctx.fillRect(member.x + 9, fY + 25, 22, 4);
+
+                    // Zoram brass keys on belt
+                    if (member.name === "Zoram") {
+                        let kX = (member.facing > 0) ? member.x + 24 : member.x + 10;
+                        ctx.fillStyle = "#ffd700";
+                        ctx.fillRect(kX, fY + 29, 3, 7);
+                        ctx.beginPath();
+                        ctx.arc(kX + 1.5, fY + 29, 2.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
                     // Head
+                    let headDirX = (member.facing > 0) ? 1 : -1;
                     ctx.fillStyle = "#ffdbac";
                     ctx.beginPath();
-                    ctx.arc(member.x + 20, fY + 12, 9, 0, Math.PI * 2);
+                    ctx.arc(member.x + 20 + headDirX, fY + 12, 9, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Legs
+                    // Eyes facing direction
+                    ctx.fillStyle = "#ffffff";
+                    let eyeBaseX = member.x + 20 + (member.facing > 0 ? 2 : -6);
+                    ctx.fillRect(eyeBaseX, fY + 10, 4, 3);
+                    ctx.fillStyle = "#000000";
+                    ctx.fillRect(eyeBaseX + (member.facing > 0 ? 2 : 0), fY + 11, 2, 2);
+
+                    // Hair / Beard
+                    ctx.fillStyle = member.name === "Sam" ? "#5d4037" : "#1a0d00";
+                    ctx.fillRect(member.x + 11 + headDirX, fY + 3, 18, 3);
+                    ctx.beginPath();
+                    ctx.moveTo(member.x + 12 + headDirX, fY + 14);
+                    if (ctx.quadraticCurveTo) {
+                        ctx.quadraticCurveTo(member.x + 20 + headDirX, fY + 22, member.x + 28 + headDirX, fY + 14);
+                    } else {
+                        ctx.lineTo(member.x + 28 + headDirX, fY + 14);
+                    }
+                    ctx.fill();
+
+                    // Legs with autonomous independent walk/jump/crouch
                     ctx.lineWidth = 3;
                     ctx.strokeStyle = "#ffdbac";
-                    let step = Math.sin(gameFrame * 0.15 + member.offset * 0.25) * 8;
-                    ctx.beginPath();
-                    ctx.moveTo(member.x + 14, fY + fH - 8);
-                    ctx.lineTo(member.x + 14 + step, fY + fH);
-                    ctx.moveTo(member.x + 26, fY + fH - 8);
-                    ctx.lineTo(member.x + 26 - step, fY + fH);
-                    ctx.stroke();
+                    if (member.jumping || !member.grounded) {
+                        ctx.beginPath();
+                        ctx.moveTo(member.x + 14, fY + fH - 8);
+                        ctx.lineTo(member.x + 12, fY + fH - 2);
+                        ctx.moveTo(member.x + 26, fY + fH - 8);
+                        ctx.lineTo(member.x + 28, fY + fH - 4);
+                        ctx.stroke();
+                    } else if (member.agachado) {
+                        ctx.fillStyle = "#ffdbac";
+                        ctx.fillRect(member.x + 10, fY + fH - 4, 20, 4);
+                    } else if (isMoving) {
+                        let step = Math.sin(gameFrame * 0.22 + (member.animOffset || 0)) * 7;
+                        ctx.beginPath();
+                        ctx.moveTo(member.x + 14, fY + fH - 8);
+                        ctx.lineTo(member.x + 14 + step, fY + fH);
+                        ctx.moveTo(member.x + 26, fY + fH - 8);
+                        ctx.lineTo(member.x + 26 - step, fY + fH);
+                        ctx.stroke();
+                        ctx.fillStyle = "#3e2723";
+                        ctx.fillRect(member.x + 11 + step, fY + fH - 2, 6, 3);
+                        ctx.fillRect(member.x + 23 - step, fY + fH - 2, 6, 3);
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(member.x + 14, fY + fH - 8);
+                        ctx.lineTo(member.x + 14, fY + fH);
+                        ctx.moveTo(member.x + 26, fY + fH - 8);
+                        ctx.lineTo(member.x + 26, fY + fH);
+                        ctx.stroke();
+                        ctx.fillStyle = "#3e2723";
+                        ctx.fillRect(member.x + 11, fY + fH - 2, 6, 3);
+                        ctx.fillRect(member.x + 23, fY + fH - 2, 6, 3);
+                    }
 
                     // Name tag
-                    ctx.fillStyle = "#ffffff";
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
                     ctx.font = "bold 9px Outfit";
                     ctx.textAlign = "center";
+                    ctx.shadowColor = "#000000";
+                    ctx.shadowBlur = 4;
                     ctx.fillText(member.name, member.x + 20, fY - 5);
                     ctx.restore();
                 });
 
-                // Draw Enemies (Guards with spears & torches)
+                // Draw Enemies (Guards with spears, torches & athletic jumping)
                 this.enemies.forEach(e => {
                     if (e.hp <= 0) return;
                     ctx.save();
+
                     // Ground shadow
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+                    let eShadowAlpha = e.grounded ? 0.35 : 0.15;
+                    ctx.fillStyle = `rgba(0, 0, 0, ${eShadowAlpha})`;
                     ctx.beginPath();
                     ctx.ellipse(e.x + e.width / 2, e.y + e.height, e.width / 2 - 5, 5, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Armor
+                    // Jump trail effect
+                    if (e.jumping || !e.grounded) {
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+                        ctx.beginPath();
+                        ctx.arc(e.x + e.width / 2 - (e.dir * 12), e.y + e.height - 2, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Armor Cuirass
                     ctx.fillStyle = "#78909c";
                     ctx.fillRect(e.x + 8, e.y + 20, e.width - 16, e.height - 28);
                     ctx.fillStyle = "#cd7f32";
@@ -2619,10 +3003,40 @@ const module1 = {
                     ctx.beginPath();
                     ctx.arc(e.x + e.width / 2, e.y + 12, 10, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.fillStyle = "#d32f2f";
-                    ctx.fillRect(e.x + e.width / 2 - 3, e.y - 6, 6, 8);
 
-                    // Torch if guard_torch
+                    // Eyes
+                    ctx.fillStyle = "#ffffff";
+                    let eyeX = e.x + e.width / 2 + (e.dir > 0 ? 2 : -6);
+                    ctx.fillRect(eyeX, e.y + 10, 4, 3);
+                    ctx.fillStyle = "#000000";
+                    ctx.fillRect(eyeX + (e.dir > 0 ? 2 : 0), e.y + 11, 2, 2);
+
+                    // Helmet Crest (streams backward when moving/jumping)
+                    ctx.fillStyle = "#d32f2f";
+                    let crestLean = e.jumping ? -e.dir * 5 : -e.dir * 2;
+                    ctx.fillRect(e.x + e.width / 2 - 3 + crestLean, e.y - 7, 7, 9);
+
+                    // Legs (Athletic jump pose vs running legs)
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "#455a64";
+                    if (e.jumping || !e.grounded) {
+                        ctx.beginPath();
+                        ctx.moveTo(e.x + 16, e.y + e.height - 8);
+                        ctx.lineTo(e.x + 10, e.y + e.height - 2);
+                        ctx.moveTo(e.x + 34, e.y + e.height - 8);
+                        ctx.lineTo(e.x + 40, e.y + e.height - 4);
+                        ctx.stroke();
+                    } else {
+                        let step = Math.sin(gameFrame * 0.25 + (e.startX || 0)) * 8;
+                        ctx.beginPath();
+                        ctx.moveTo(e.x + 16, e.y + e.height - 8);
+                        ctx.lineTo(e.x + 16 + step, e.y + e.height);
+                        ctx.moveTo(e.x + 34, e.y + e.height - 8);
+                        ctx.lineTo(e.x + 34 - step, e.y + e.height);
+                        ctx.stroke();
+                    }
+
+                    // Weapons
                     if (e.type === "guard_torch") {
                         let tx = e.dir > 0 ? e.x + e.width + 2 : e.x - 8;
                         ctx.fillStyle = "#5d4037";
@@ -2630,6 +3044,22 @@ const module1 = {
                         ctx.fillStyle = "#ff9800";
                         ctx.beginPath();
                         ctx.arc(tx + 2, e.y + 10, 7, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = "#ffeb3b";
+                        ctx.beginPath();
+                        ctx.arc(tx + 2, e.y + 9, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Spear for normal guards (angled aggressively when chasing or jumping)
+                        let sx = e.dir > 0 ? e.x + e.width - 4 : e.x + 4;
+                        ctx.fillStyle = "#5d4037";
+                        ctx.fillRect(sx, e.y + 4, 3, e.height - 4);
+                        ctx.fillStyle = "#b0bec5";
+                        ctx.beginPath();
+                        ctx.moveTo(sx - 2, e.y + 4);
+                        ctx.lineTo(sx + 1.5, e.y - 7);
+                        ctx.lineTo(sx + 5, e.y + 4);
+                        ctx.closePath();
                         ctx.fill();
                     }
                     ctx.restore();
